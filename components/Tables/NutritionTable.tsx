@@ -3,11 +3,11 @@ import { DataTable } from "react-native-paper";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEffect, useState } from "react";
 
-const paramHeaders = [
-    "Name",
-    "Amount",
-    "Unit"
-]
+const headerMap: Map<string, string> = new Map<string, string>([
+    ["Name", "nutrientName"],
+    ["Amount", "value"],
+    ["Unit","unitName"]
+]);
 
 export default function NutritionTable(props: any) {
 
@@ -35,11 +35,17 @@ export default function NutritionTable(props: any) {
                 else if (a.nutrientName.includes("Carbohydrates")) return(-1)
                 else if (b.nutrientName.includes("Carbohydrates")) return(1)
                 
-                else return(a.nutrientId.localeCompare(b.nutrientId))
+                else if (a.nutrientNumber<b.nutrientNumber) return(-1)
+                return(1)
         });
 
+        let paramHeaders:string[] = [];
+        for (let header of headerMap.keys()) {
+            paramHeaders.push(header);
+        }
+        
         setNutrients(nutrition);
-        setHeaders(paramHeaders);
+        setHeaders(props.headers); 
         setMultiplier(props.multiplier)
         
     }, [props])
@@ -72,8 +78,10 @@ export default function NutritionTable(props: any) {
                                     {
                                         // have non-name items populate right side of cell to give more space to name
                                         headers.map((header: string, j: number) => {
-                                            if (header==="amount" || header==="percentOfDailyNeeds") return <DataTable.Cell key={j} textStyle={styles.text} numeric={true}>{(nutrient[header]*multiplier).toFixed(2)}</DataTable.Cell>
-                                            else return <DataTable.Cell key={j} textStyle={styles.text} numeric={ header==="name" ? false : true}>{nutrient[header]}</DataTable.Cell>
+                                            let index = headerMap.get(header)
+                                            if (index===undefined) return
+                                            if (header==="Amount") return <DataTable.Cell key={j} textStyle={styles.text} numeric={true}>{(nutrient[index]*multiplier).toFixed(2)}</DataTable.Cell>
+                                            else return <DataTable.Cell key={j} textStyle={styles.text} numeric={ header==="Name" ? false : true}>{nutrient[index]}</DataTable.Cell>
                                         })
                                     }
                                 </DataTable.Row>

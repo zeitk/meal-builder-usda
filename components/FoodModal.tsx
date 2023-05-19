@@ -14,6 +14,16 @@ import NutritionTable from "./Tables/NutritionTable";
 import PropertiesTable from "./Tables/PropertiesTable";
 import ServingSizeTable from "./Tables/ServingSizeTable";
 
+const headerMap: Map<string, string> = new Map<string, string>([
+    ["Name", "nutrientName"],
+    ["Amount", "value"],
+    ["Unit","unitName"]
+]);
+
+let paramHeaders:string[] = [];
+for (let header of headerMap.keys()) {
+    paramHeaders.push(header);
+}
 
 export default function FoodModal(props: any) {
 
@@ -154,14 +164,14 @@ export default function FoodModal(props: any) {
                                 </View>
                                 <View style={styles.servingSizeView}>
                                     { (props.context==="Home") ?
-                                        <MealServingInput newServingQuantity={newMultiplier} multiplier={100} context="Home"></MealServingInput>
+                                        <MealServingInput headers={paramHeaders} newServingQuantity={newMultiplier} multiplier={100} context="Home"></MealServingInput>
                                         :
-                                        <ServingSizeTable servingSizeProps={100} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
+                                        <ServingSizeTable headers={paramHeaders} servingSizeProps={100} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
                                     }
                                     
                                 </View>
                                 <View style={styles.nutritionView}>
-                                    <NutritionTable nutrition={props.nutrition} multiplier={multiplier}></NutritionTable>
+                                    <NutritionTable headers={paramHeaders} nutrition={props.nutrition} multiplier={multiplier}></NutritionTable>
                                 </View>
                             </View>
                         ) 
