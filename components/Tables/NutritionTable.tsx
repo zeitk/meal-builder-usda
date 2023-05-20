@@ -1,13 +1,8 @@
 import React from 'react'
 import { DataTable } from "react-native-paper";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { useEffect, useState } from "react";
-
-const headerMap: Map<string, string> = new Map<string, string>([
-    ["Name", "nutrientName"],
-    ["Amount", "value"],
-    ["Unit","unitName"]
-]);
+import { useEffect, useState, useContext } from "react";
+import HeadersContext from '../../context/DataHeaders';
 
 export default function NutritionTable(props: any) {
 
@@ -15,6 +10,7 @@ export default function NutritionTable(props: any) {
     const [nutrients, setNutrients] = useState<any>([]);
     const [multiplier, setMultiplier] = useState<number>(1)
     const [headers, setHeaders] = useState<string[]>([]);
+    const headersMap = useContext(HeadersContext)
 
     useEffect(() => {
 
@@ -26,7 +22,12 @@ export default function NutritionTable(props: any) {
         nutrition.sort((a: any, b: any) => {
 
                 // have major macros go first
-                if (a.nutrientName==="Energy") return(-1)
+                if (a.nutrientName==="Energy") {
+                    if (b.nutrientName==="Energy") {
+                        if (b.unitName==="KCAL") return(1)
+                    }
+                    return(-1)
+                }
                 else if (b.nutrientName==="Energy") return(1)
                 else if (a.nutrientName==="Protein") return(-1)
                 else if (b.nutrientName==="Protein") return(1)
@@ -40,12 +41,12 @@ export default function NutritionTable(props: any) {
         });
 
         let paramHeaders:string[] = [];
-        for (let header of headerMap.keys()) {
+        for (let header of headersMap.keys()) {
             paramHeaders.push(header);
         }
-        
+
         setNutrients(nutrition);
-        setHeaders(props.headers); 
+        setHeaders(paramHeaders); 
         setMultiplier(props.multiplier)
         
     }, [props])
@@ -78,9 +79,11 @@ export default function NutritionTable(props: any) {
                                     {
                                         // have non-name items populate right side of cell to give more space to name
                                         headers.map((header: string, j: number) => {
-                                            let index = headerMap.get(header)
+                                            let index = headersMap.get(header)
                                             if (index===undefined) return
-                                            if (header==="Amount") return <DataTable.Cell key={j} textStyle={styles.text} numeric={true}>{(nutrient[index]*multiplier).toFixed(2)}</DataTable.Cell>
+                                            if (header==="Amount") {
+                                                return <DataTable.Cell key={j} textStyle={styles.text} numeric={true}>{(nutrient[index]*multiplier).toFixed(2)}</DataTable.Cell>
+                                            }
                                             else return <DataTable.Cell key={j} textStyle={styles.text} numeric={ header==="Name" ? false : true}>{nutrient[index]}</DataTable.Cell>
                                         })
                                     }

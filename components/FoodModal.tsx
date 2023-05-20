@@ -7,11 +7,7 @@ import { Button, Modal, Portal } from "react-native-paper";
 import QuicklistContext from '../context/QuicklistContext';
 import { IFood } from '../interfaces/Interfaces';
 import MealServingInput from './Meals/MealServingInput';
-import CaloricBreakdownTable from "./Tables/CaloricBreakdownTable";
-import CostTable from "./Tables/CostTable";
-import FlavonoidsTable from "./Tables/FlavonoidsTable";
 import NutritionTable from "./Tables/NutritionTable";
-import PropertiesTable from "./Tables/PropertiesTable";
 import ServingSizeTable from "./Tables/ServingSizeTable";
 
 const headerMap: Map<string, string> = new Map<string, string>([
@@ -166,7 +162,7 @@ export default function FoodModal(props: any) {
                                     { (props.context==="Home") ?
                                         <MealServingInput headers={paramHeaders} newServingQuantity={newMultiplier} multiplier={100} context="Home"></MealServingInput>
                                         :
-                                        <ServingSizeTable headers={paramHeaders} servingSizeProps={100} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
+                                        <ServingSizeTable headers={paramHeaders} baseServing={100} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
                                     }
                                     
                                 </View>

@@ -1,35 +1,31 @@
 import React from 'react'
 import { StyleSheet, Text, View, TextInput } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
+import HeadersContext from '../../context/DataHeaders';
 
 export default function ServingSizeTable(props: any) {
 
     // states
     const [baseServingSize, setBaseServingSize] = useState<any>([]);
     const [unit, setUnit] = useState<string>("");
+    const [headers, setHeaders] = useState<string[]>([]);
+    const headersMap = useContext(HeadersContext);
 
     function newServingSize(servingSize: any) {
 
         if (servingSize==="") servingSize=baseServingSize;
-
         const multiplier = servingSize/baseServingSize;
         props.newMultiplier(multiplier)
     }
 
     useEffect(() => {
 
-        let servingSizeProps = props.servingSizeProps;  
-        let paramHeaders: string[] = [];
-
-        // save header titles
-        for (let header in servingSizeProps) {
+        let paramHeaders:string[] = [];
+        for (let header of headersMap.keys()) {
             paramHeaders.push(header);
         }
-
-        // store the unit and the serving size
-        paramHeaders.forEach((header) => {
-            header === "amount" ? setBaseServingSize(servingSizeProps[header]) : setUnit(servingSizeProps[header])
-        })
+        setHeaders(paramHeaders)
+        setBaseServingSize(props.baseServing)
         
     }, [props])
 
