@@ -22,6 +22,7 @@ export default function Tabs() {
     const [mealList, setMealList] = useState<IMeal[]>([])
 
     useEffect(() => {
+        clearMemory();
         getQuicklist();
         getMealList(); 
     }, [])

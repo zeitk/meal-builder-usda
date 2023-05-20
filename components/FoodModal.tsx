@@ -25,15 +25,20 @@ export default function FoodModal(props: any) {
 
     // states
     const [page, setPage] = useState<number>(1);
+    const [maxPage, setMaxPage] = useState<number>(3);
     const [quicklist, setQuicklist] = useContext(QuicklistContext);
     const [multiplier, setMultiplier] = useState<number>(1);
     const [isInQuicklist, setIsInQuicklist] = useState<Boolean>(false);
+    const [macros, setMacros] = useState<any>({});
+    const [micros, setMicros] = useState<any>({});
+    const [other, setOther] = useState<any>({});
 
     // re-render when new food is selected
     useEffect(() => {
         isFoodInQuicklist(props.id);
         setPage(1);
         (props.context==="MealInfo") ? setMultiplier(props.servings["multiplier"]):setMultiplier(1);
+        sortNutrients()
     }, [props])
 
     // callback to hide modal
@@ -49,6 +54,90 @@ export default function FoodModal(props: any) {
         if (page > 1) setPage(page - 1)
     }
 
+    function sortNutrients() {
+
+        let nutrients = props.nutrition
+
+        // check for undefined or empty object
+        if (nutrients===undefined || Object.keys(nutrients).length === 0) return
+
+        let core:any[] = [];
+        let trace:any[] = [];
+        let other:any[] = [];
+
+        for (let nutrient of nutrients) {
+            if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) core.push(nutrient)
+            else if (nutrient.nutrientNumber < 605) trace.push(nutrient)
+            else other.push(nutrient);
+        }
+
+        // sort by id of macronutrient
+        core.sort((a: any, b: any) => {
+            // have major macros go first
+            if (a.nutrientName.includes("Energy")) {
+                if (b.nutrientName.includes("Energy")) {
+                    if (b.unitName==="KCAL") return(1)
+                }
+                return(-1)
+            }
+            else if (b.nutrientName.includes("Energy")) return(1)
+            else if (a.nutrientName==="Total lipid (fat)") return(-1)
+            else if (b.nutrientName==="Total lipid (fat)") return(1)
+
+            else if (a.nutrientName.includes("Carbohydrate")) return(-1)
+            else if (b.nutrientName.includes("Carbohydrate")) return(1)
+
+            else if (a.nutrientName==="Protein") return(-1)
+            else if (b.nutrientName==="Protein") return(1)
+
+            else if (a.nutrientName.includes("Fatty")) return(-1)
+            else if (b.nutrientName.includes("Fatty")) return(1)
+
+            else if (a.nutrientNumber<b.nutrientNumber) return(-1)
+            return(1)
+        });
+
+        // sort by id of micronutrient
+        trace.sort((a: any, b: any) => {
+            // have vitamins go first
+            if (a.nutrientName.includes("Vitamin")) {
+                if (b.nutrientName.includes("Vitamin")) {
+                    if (a.nutrientName>b.nutrientName) return(1)
+                }
+                return(-1)
+            }
+            else if (b.nutrientName.includes("Vitamin")) return(1)
+
+            else if (a.nutrientNumber<b.nutrientNumber) return(-1)
+            return(1)
+        });
+        
+        let max = 1;
+        if (trace.length > 0) max++;
+        if (other.length > 0) max++;
+
+        setMaxPage(max);
+        setMacros(core);
+        setMicros(trace)
+        setOther(other);
+    }
+
+    function nameMain() {
+        let name = props.name;
+        if (name === undefined) return
+        return (name.split(","))[0]
+    }
+
+    function nameSub() {
+        let name = props.name;
+        if (name === undefined) return;
+        let index = name.search(",")
+        let sub = name.slice(index + 2)
+        if (sub === "") return;
+        sub = sub[0].toUpperCase() + sub.slice(1)
+        return sub;
+    }
+    
     function isFoodInQuicklist(foodId: number) {
         let found = false;
         quicklist.forEach((food: any) => {
@@ -76,11 +165,7 @@ export default function FoodModal(props: any) {
         if (Object.keys(props.nutrition).length === 0) return
 
         // deep copy current food to prevent pointer issues
-        let foodObject = JSON.parse(JSON.stringify(props.nutrition))
-        foodObject["cost"] = props.cost;
-        foodObject["name"] = props.name;
-        foodObject["image"] = props.image
-        foodObject["id"] = props.id;
+        let foodObject = JSON.parse(JSON.stringify(props))
 
         // don't store the same item twice
         quicklist.forEach((foodItem: any) => {
@@ -151,70 +236,52 @@ export default function FoodModal(props: any) {
         <Portal>
             <Modal visible={props.modalVisible} style={styles.modal} onDismiss={toggleModal}>
                 <View style={styles.containerView}>
+                    <View style={styles.upperView}>
+                        <View style={styles.headerView}>
+                            <Text numberOfLines={1} style={styles.header}>{nameMain()}</Text>
+                            <Text numberOfLines={1} style={styles.headerSub}>{nameSub()}</Text>
+                        </View>
+                        <View style={styles.servingSizeView}>
+                            { (props.context==="Home") ?
+                                <MealServingInput headers={paramHeaders} newServingQuantity={newMultiplier} multiplier={100} context="Home"></MealServingInput>
+                                :
+                                <ServingSizeTable headers={paramHeaders} baseServing={100} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
+                            }
+                        </View>
+                    </View>
                     {
                         (page === 1) &&
                         (
-                            <View style={styles.upperView}>
-                                <View style={styles.headerView}>
-                                    <Text style={styles.header}>{props.name}</Text>
-                                </View>
-                                <View style={styles.servingSizeView}>
-                                    { (props.context==="Home") ?
-                                        <MealServingInput headers={paramHeaders} newServingQuantity={newMultiplier} multiplier={100} context="Home"></MealServingInput>
-                                        :
-                                        <ServingSizeTable headers={paramHeaders} baseServing={100} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
-                                    }
-                                    
-                                </View>
-                                <View style={styles.nutritionView}>
-                                    <NutritionTable headers={paramHeaders} nutrition={props.nutrition} multiplier={multiplier}></NutritionTable>
-                                </View>
+                            <View style={styles.nutritionView}>
+                                <NutritionTable headers={paramHeaders} nutrition={macros} multiplier={multiplier} type={"macros"}></NutritionTable>
                             </View>
                         ) 
                     }
-                    {/* {
-                        (page == 2) &&
+                    {
+                        (page == 2 && micros.length > 0) &&
                         (
-                            <View style={styles.upperView}>
-                                <View style={styles.headerView}>
-                                    <Text style={styles.header}>{props.name}</Text>
-                                </View>
-                                <View style={styles.costView}>
-                                    <CostTable cost={props.cost} multiplier={multiplier}></CostTable>
-                                </View>
-                                <View style={styles.caloricBreakdownView}>
-                                    <CaloricBreakdownTable caloricBreakdownProps={props.nutrition["caloricBreakdown"]}></CaloricBreakdownTable>
-                                </View>
-                                <View style={styles.propertiesView}>
-                                    <PropertiesTable propertiesProps={props.nutrition["properties"]}></PropertiesTable>
-                                </View>
+                            <View style={styles.nutritionView}>
+                                <NutritionTable headers={paramHeaders} nutrition={micros} multiplier={multiplier}></NutritionTable>
                             </View>
-                            
                         )
                     }
                     {
-                        (page == 3) &&
+                        (page == 3 && other.length > 0) &&
                         (
-                            <View style={styles.upperView}>
-                                <View style={styles.headerView}>
-                                    <Text style={styles.header}>{props.name}</Text>
-                                </View>
-                                <View style={styles.flavonoidsView}>
-                                    <FlavonoidsTable flavonoidsProps={props.nutrition["flavonoids"]} multiplier={multiplier}></FlavonoidsTable>
-                                </View>
-                            </View>
-                           
+                            <View style={styles.nutritionView}>
+                                <NutritionTable headers={paramHeaders} nutrition={other} multiplier={multiplier}></NutritionTable>
+                            </View>                     
                         )
-                    } */}
+                    }
 
                     { (props.context !== "Home") 
                         ?
                         <View style={styles.pageButtonsView}>
                             <Button textColor="#2774AE" children="Prev" onPress={prevPage} disabled={page===1} labelStyle={styles.pageButtonText}></Button>
                             <View style={styles.pageText}>
-                                <Text style={styles.text}>{page} of 3</Text>
+                                <Text style={styles.text}>{page} of {maxPage}</Text>
                             </View>
-                            <Button textColor="#2774AE" children="Next" onPress={nextPage} disabled={page===3} labelStyle={styles.pageButtonText}></Button>
+                            <Button textColor="#2774AE" children="Next" onPress={nextPage} disabled={page===maxPage} labelStyle={styles.pageButtonText}></Button>
                         </View>
                         :
                         null
@@ -273,23 +340,23 @@ const styles = StyleSheet.create({
         borderRadius: 15
     },
     upperView: {
-        height: '85%',
+        height: '20%',
         width: '100%',
         alignItems: 'center'
     },
     headerView: {
-        height: '7.5%',
+        height: '60%',
         width: '100%',
         alignItems: 'center',
         justifyContent: 'center'
     },
     servingSizeView: {
-        height: '15%',
+        height: '40%',
         width: '100%',
         alignItems: 'center'
     },
     nutritionView: {
-        height: '77.5%',
+        height: '65%',
         width: '100%',
         overflow: 'hidden'
     },
@@ -349,7 +416,13 @@ const styles = StyleSheet.create({
     },   
     header: {
         textTransform: 'capitalize',
+        fontWeight: '300',
         fontSize: 24
+    },
+    headerSub: {
+        textTransform: 'capitalize',
+        fontSize: 20,
+        fontWeight: '300',
     },
     text: {
         lineHeight: 38

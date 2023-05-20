@@ -26,7 +26,7 @@ export default function Meals({ navigation }: any) {
                 </ScrollView>
                 :
                 <View style={styles.noMealsBannerView}>
-                    <Text style={styles.noMealsBannerText}>No saved meals currently</Text>
+                    <Text style={styles.noMealsBannerText}>No saved meals</Text>
                 </View>
             }
             </View>

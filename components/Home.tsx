@@ -110,7 +110,7 @@ export default function Home({ navigation }:any) {
                     </ScrollView>
                     :
                     <View style={page1Styles.noSavedItemsView}>
-                        <Text style={page1Styles.noSavedItemsText}>No saved meals currently</Text>
+                        <Text style={page1Styles.noSavedItemsText}>No saved meals</Text>
                         <Button mode="text" textColor="#2774AE" children={"Go to 'Meals'"} style={page2Styles.button} labelStyle={page2Styles.buttonText} onPress={()=>(navigation.navigate("Meals"))}></Button>
                     </View>
                     }       
@@ -124,13 +124,13 @@ export default function Home({ navigation }:any) {
                     <ScrollView style={page1Styles.horizontalScrollView} horizontal={true}>
                     {
                         quicklist.map((food: any, i: number) => {
-                            return <HomeCard key={i} mode="food" id={food["id"]} image={food["image"]} callback={moreInfo} name={food["name"]} ></HomeCard>
+                            return <HomeCard key={i} mode="food" id={food["id"]} callback={moreInfo} name={food["name"]} ></HomeCard>
                         })
                     }
                     </ScrollView>
                     :
                     <View style={page1Styles.noSavedItemsView}>
-                        <Text style={page1Styles.noSavedItemsText}>No saved foods currently</Text>
+                        <Text style={page1Styles.noSavedItemsText}>No saved foods</Text>
                         <Button mode="text" textColor="#2774AE" children={"Go to 'Search'"} style={page2Styles.button} labelStyle={page2Styles.buttonText} onPress={()=>(navigation.navigate("Search"))}></Button>
                     </View>
                     }

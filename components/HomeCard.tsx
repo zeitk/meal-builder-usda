@@ -13,26 +13,10 @@ export default function HomeCard(props: any) {
     const  { mealList } = useMealList();
 
     useEffect(() => {
-        if (props.mode==="meal") updateImages("", props["foods"])
-        else if (props.mode==="food") updateImages(props["image"],"")
     },[mealList])
 
-    function updateImages(image?: any, foods?: any) {
 
-        if (foods !=="") { 
-            let newImages:String[] = [];
-            foods.forEach((food: any) => {
-                newImages.push(food["image"])
-            })
-            setImages(newImages)
-        }
-        else if (image !== "") {
-            setImages([image])
-        }
-    }
-
-    function showMoreInfo() {
-        
+    function showMoreInfo() { 
         if (props.mode==="food") props.callback(props.id, props.mode)
         else props.navigation.navigate('MealInfoHome', { id: props["id"], mode: "Home" })
     }
@@ -46,37 +30,6 @@ export default function HomeCard(props: any) {
 
                         <View style={styles.titleView}>
                             <Text numberOfLines={3} style={styles.title}>{props.name}</Text>
-                        </View>
-
-                        <View style={styles.imageView}>
-                            { (images !== undefined && images.length>1)
-                            ?
-                            <View>
-                                <View style={styles.imageViewRow}>
-                                {
-                                    images.map((image: any, i: number) => {
-                                        if (i < 2) return<Image key={i} source={{uri: imageUrl + imageSize + "/" + image}} style={styles.mealImage}></Image>
-                                    })
-                                }
-                                </View>
-                                <View style={styles.imageViewRow}>
-                                    {
-                                        images.map((image: any, i: number) => {
-                                            if (i > 1 && i < 4) return<Image key={i} source={{uri: imageUrl + imageSize + "/" + image}} style={styles.mealImage}></Image>
-                                        })
-                                    }
-                                </View>
-                            </View>
-                            :
-                            <View style={styles.imageViewFood}>
-                                {
-                                    images.map((image: any, i: number) => {
-                                        return<Image key={i} source={{uri: imageUrl + imageSize + "/" + image}} style={styles.foodImage}></Image>
-                                    })
-                                }
-                            </View>
-                            }
-
                         </View>
 
                     </Card.Content>

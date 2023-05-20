@@ -84,11 +84,10 @@ export default function Search({ navigation } : any) {
         })
             .then(res => res.json())
             .then(json => {
-                //console.log(json.foods)
+                if (json.totalHits === 0) return;
                 sortItems(json.foods)
                 setTotalItems(json.totalHits);
             })
-        return;
         scrollRef.current?.scrollTo({
             y: 0,
             animated: false
@@ -112,44 +111,6 @@ export default function Search({ navigation } : any) {
         setCurrentId(id.toString())
         setCurrentName(name);
         setModalVisible(true);
-
-        // // don't fetch if we already have the info
-        // if (id.toString()!==currentId) {
-
-        //     setNutrition([]);
-
-        //     const params = {
-        //         amount: '150',
-        //         unit: 'grams',
-        //         apiKey: '206c039ac4b7451fb2947d93c4a1f8d4'
-        //     };
-
-        //     let url = "https://api.spoonacular.com/food/ingredients/"
-        //     url += id.toString() + "/information?" + (new URLSearchParams(params)).toString()
-
-        //     fetch(url, {
-        //         method: "GET",
-        //         headers: {
-        //             "Content-Type": "application/json"
-        //         }
-        //     })
-        //         .then(res => res.json())
-        //         .then(json => {
-        //             setNutrition(json.nutrition)
-        //             setCost(json.estimatedCost);
-        //     })
-
-        //     // info is retrieved, show modal. Store ID of food to prevent additional API calls
-        //     setCurrentId(id.toString())
-        //     setCurrentName(name);
-        //     setModalVisible(true);
-        // }
-
-        // // we already have the info, just show it
-        // else {
-            
-        // }
-
     }
 
     function toggleModal() {

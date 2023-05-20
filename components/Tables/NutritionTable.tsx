@@ -18,28 +18,6 @@ export default function NutritionTable(props: any) {
 
         if (nutrition===undefined) return
 
-        // sort by name of nutrient
-        nutrition.sort((a: any, b: any) => {
-
-                // have major macros go first
-                if (a.nutrientName==="Energy") {
-                    if (b.nutrientName==="Energy") {
-                        if (b.unitName==="KCAL") return(1)
-                    }
-                    return(-1)
-                }
-                else if (b.nutrientName==="Energy") return(1)
-                else if (a.nutrientName==="Protein") return(-1)
-                else if (b.nutrientName==="Protein") return(1)
-                else if (a.nutrientName==="Total lipid (fat)") return(-1)
-                else if (b.nutrientName==="Total lipid (fat)") return(1)
-                else if (a.nutrientName.includes("Carbohydrates")) return(-1)
-                else if (b.nutrientName.includes("Carbohydrates")) return(1)
-                
-                else if (a.nutrientNumber<b.nutrientNumber) return(-1)
-                return(1)
-        });
-
         let paramHeaders:string[] = [];
         for (let header of headersMap.keys()) {
             paramHeaders.push(header);
@@ -63,7 +41,7 @@ export default function NutritionTable(props: any) {
                         <DataTable.Header>
                             {
                                 headers.map((header: string, i) => {
-                                    return <DataTable.Title textStyle={styles.header} key={i} numeric={ header==="Name" ? false : true}>{header}</DataTable.Title>
+                                    return <DataTable.Title textStyle={styles.header} key={i} numeric={ header==="Name" ? false : true} style={ header==="Name" ? {flex: 3} : {}}>{header}</DataTable.Title>
                                 })
                             }
                         </DataTable.Header>
@@ -79,11 +57,39 @@ export default function NutritionTable(props: any) {
                                     {
                                         // have non-name items populate right side of cell to give more space to name
                                         headers.map((header: string, j: number) => {
+
                                             let index = headersMap.get(header)
                                             if (index===undefined) return
+
                                             if (header==="Amount") {
-                                                return <DataTable.Cell key={j} textStyle={styles.text} numeric={true}>{(nutrient[index]*multiplier).toFixed(2)}</DataTable.Cell>
+                                                return <DataTable.Cell key={j} textStyle={styles.text} numeric={true} >{(nutrient[index]*multiplier).toFixed(2)}</DataTable.Cell>
                                             }
+
+                                            else if (header === "Unit") {
+
+                                                let displayUnit:string; 
+
+                                                // kJ is always in index 1 and we want to keep the casing there
+                                                if (nutrient[index] === "kJ") {
+                                                    displayUnit = nutrient[index];
+                                                }
+                                                else {
+                                                    displayUnit = nutrient[index].toLowerCase();
+                                                }
+
+                                                return <DataTable.Cell key={j} textStyle={styles.text} numeric={true} >{displayUnit}</DataTable.Cell>
+                                            }
+                                            
+                                            else if (header === "Name") {
+
+                                                let displayName:string = nutrient[index];
+
+                                               
+                                                if (nutrient[index].includes("Total lipid")) displayName = "Total fat"
+                                                else if (nutrient[index].includes("Carbohydrates")) displayName = "Carbohydrates";
+                                                return <DataTable.Cell key={j} textStyle={styles.text} numeric={false} style={{flex: 3}}>{displayName} </DataTable.Cell>
+                                            }
+
                                             else return <DataTable.Cell key={j} textStyle={styles.text} numeric={ header==="Name" ? false : true}>{nutrient[index]}</DataTable.Cell>
                                         })
                                     }

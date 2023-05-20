@@ -3,14 +3,25 @@ import React, { useState } from 'react'
 import { StyleSheet, Text, View, Image, Pressable, TextInput } from "react-native";
 import { Card } from "react-native-paper";
 import { Entypo } from '@expo/vector-icons'; 
-import { IFood } from '../interfaces/Interfaces';
-
-const imageSize = "100x100";
-const imageUrl = "https://spoonacular.com/cdn/ingredients_"
+import FoodCardBase from './FoodCardBase';
 
 export default function FoodCard(props: any) {
 
     const [isPressed, setIsPressed] = useState<Boolean>(false)
+
+    function nameMain() {
+        nameSub();
+        return (props.name.split(","))[0]
+    }
+
+    function nameSub() {
+        if (props.name === undefined) return
+        let index = props.name.search(",")
+        let sub = props.name.slice(index + 2)
+        if (sub === "" || sub === undefined) return;
+        sub = sub[0].toUpperCase() + sub.slice(1)
+        return sub;
+    }
 
     function showMoreInfo(quantity: any) {
 
@@ -52,14 +63,13 @@ export default function FoodCard(props: any) {
 
                 <Card style={(isPressed) ? styles.card_pressed:styles.card_unpressed}>
                     <Card.Content style={styles.overallView}>
-                        <View style={styles.imageView}>
-                            <Image source={{ uri: imageUrl + imageSize + "/" + props.image }} style={styles.image}></Image>
-                        </View>
                         {/* Show different displays depending on our activity */}
                         {/* Viewing from Search or Quicklist */}
                         { (props.mode===0) &&
                             <View style={styles.unpressedTitleView}>
-                                <Text style={styles.titleText}>{props.name}</Text>
+                                <Text numberOfLines={1} style={styles.titleText}>{nameMain()}</Text>
+                                <Text numberOfLines={1} style={styles.subText}>{nameSub()}</Text>
+                                <FoodCardBase name={props.name} nutrition={props.nutrients}></FoodCardBase>
                             </View>
                         }
                         {/* Viewing from Meal Builder */}
@@ -118,7 +128,7 @@ const styles = StyleSheet.create({
         margin: 5,
         marginLeft: 15,
         marginRight: 15,
-        height: 125,
+        height: 130,
         width: '92.5%'
     },
     card_pressed: {
@@ -143,7 +153,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'white'
     },
     unpressedTitleView: {
-        width: '72.5%'
+        width: '100%'
     },
     pressedTitleView: {
         width: '65%'
@@ -153,7 +163,12 @@ const styles = StyleSheet.create({
         fontWeight: '300',
         textAlign: 'left',
         fontSize: 21,
-        padding: 20,
+    },
+    subText: {
+        textTransform: 'capitalize',
+        fontWeight: '300',
+        textAlign: 'left',
+        fontSize: 17,
     },
     overallView: {
         flexDirection: 'row',

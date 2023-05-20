@@ -10,13 +10,11 @@ export default function Quicklist({ navigation }: any) {
     const [quicklist] = useContext(QuicklistContext)
     const [viewedFoodId, setViewedFoodId] = useState<number>()
     const [viewedFoodName, setViewedFoodName] = useState<String>()
-    const [viewedFoodImage, setViewedFoodImage] = useState<String>()
     const [viewedFoodNutrition, setViewedFoodNutrition] = useState<any>({});
-    const [viewedFoodCost, setViewedFoodCost] = useState<any>({})
     const [foodModalVisible, setFoodModalVisible] = useState<Boolean>(false);
 
     useEffect(() => {
-
+        setFoodModalVisible(false);
     },[])
 
     function moreInfo(id: number, name: string, image: string) {
@@ -25,15 +23,7 @@ export default function Quicklist({ navigation }: any) {
             if (id===food["id"]) {
                 setViewedFoodId(food["id"])
                 setViewedFoodName(food["name"])
-                setViewedFoodImage(food["image"])
-                setViewedFoodCost(food["cost"])
-                setViewedFoodNutrition({
-                    caloricBreakdown: food["caloricBreakdown"],
-                    flavonoids: food["flavonoids"],
-                    nutrients: food["nutrients"],
-                    properties: food["properties"],
-                    weightPerServing: food["weightPerServing"]
-                })
+                setViewedFoodNutrition(food["nutrition"])
                 setFoodModalVisible(true)
             }
         })
@@ -51,7 +41,8 @@ export default function Quicklist({ navigation }: any) {
                 <ScrollView style={styles.scrollview}>
                 {
                     quicklist.map((food: any, i: number) => {
-                        return <FoodCard key={i} id={food["id"]} image={food["image"]} callback={moreInfo} name={food["name"]} mode={0}></FoodCard>
+                        console.log(food);
+                        return <FoodCard key={i} id={food.id} name={food.name} nutrients={food.nutrition} callback={moreInfo} mode={0}></FoodCard>
                     })
                 }
                 </ScrollView>
@@ -64,7 +55,7 @@ export default function Quicklist({ navigation }: any) {
             
             <Portal.Host>
                     <FoodModal 
-                        nutrition={viewedFoodNutrition} name={viewedFoodName} cost={viewedFoodCost} id={viewedFoodId} image={viewedFoodImage}  
+                        nutrition={viewedFoodNutrition} name={viewedFoodName}  id={viewedFoodId} 
                         toggle={toggleFoodModal} 
                         context={"Quicklist"} modalVisible={foodModalVisible} ></FoodModal>
             </Portal.Host>
