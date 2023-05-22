@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 
 import { StyleSheet, Text, View } from "react-native";
 
 export default function FoodCardBase(props: any) {
 
-
     function getCalories() {
+        if (props.nutrition === undefined) return("")
         for (let nutrient of props.nutrition) {
             // calories
             if (nutrient.nutrientName.includes("Energy")) {
@@ -20,6 +20,7 @@ export default function FoodCardBase(props: any) {
     }
 
     function getFats() {
+        if (props.nutrition === undefined) return("")
         for (let nutrient of props.nutrition) {
             // fats
             if (nutrient.nutrientName.includes("Total lipid")) {
@@ -30,6 +31,7 @@ export default function FoodCardBase(props: any) {
     }
 
     function getCarbs() {
+        if (props.nutrition === undefined) return("")
         for (let nutrient of props.nutrition) {
             // carbs
             if (nutrient.nutrientName.includes("Carbohydrate")) {
@@ -40,6 +42,7 @@ export default function FoodCardBase(props: any) {
     }
 
     function getProtein() {
+        if (props.nutrition === undefined) return("")
         for (let nutrient of props.nutrition) {
             // protein
             if (nutrient.nutrientName.includes("Protein")) {

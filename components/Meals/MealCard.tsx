@@ -1,33 +1,17 @@
 import React, { useEffect } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState } from "react";
-import { StyleSheet, Text, View, Image, Pressable, Button, Alert } from "react-native";
+import { StyleSheet, Text, View, Pressable, Alert } from "react-native";
 import { Card } from "react-native-paper";
 import { Feather } from '@expo/vector-icons'; 
 import { useMealList } from '../../context/MealList';
 import { IMeal } from '../../interfaces/Interfaces'
 
-const imageSize = "100x100";
-const imageUrl = "https://spoonacular.com/cdn/ingredients_"
-
 export default function MealCard(props: any) {
 
-    const [images, setImages] = useState<String[]>([])
     const  { mealList, setMealList } = useMealList();
 
     useEffect(() => {
-        updateImages(props["foods"])
     },[mealList])
-
-    function updateImages(foods: any) {
-
-        let newImages:String[] = [];
-        foods.forEach((food: any) => {
-            newImages.push(food["image"])
-        })
-        setImages(newImages)
-
-    }
 
     function showMoreInfo() {
         props.navigation.navigate('MealInfo', { id: props["id"] })
@@ -71,24 +55,6 @@ export default function MealCard(props: any) {
 
             <Card style={styles.card}>
                     <Card.Content style={styles.content}>
-
-                        <View style={styles.imageView}>
-                            <View style={styles.imageViewRow}>
-                                {
-                                    images.map((image: any, i: number) => {
-                                        if (i < 2) return<Image key={i} source={{uri: imageUrl + imageSize + "/" + image}} style={styles.image}></Image>
-                                    })
-                                }
-                            </View>
-                            <View style={styles.imageViewRow}>
-                                {
-                                    images.map((image: any, i: number) => {
-                                        if (i > 1 && i < 4) return<Image key={i} source={{uri: imageUrl + imageSize + "/" + image}} style={styles.image}></Image>
-                                    })
-                                }
-                            </View>
-                        </View>
-
                         <View style={styles.titleView}>
                             <Text numberOfLines={2} style={styles.title}>{props.name}</Text>
                         </View>

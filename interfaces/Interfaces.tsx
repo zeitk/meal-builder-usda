@@ -13,8 +13,6 @@ export interface IMealListContext {
 export interface IFood {
     [key: string]: any,
     id: number,
-    image: string,
     name: string,
-    possibleUnits?: Array<string>
-    aisle?: string,
+    foodCategory?: string,
 }

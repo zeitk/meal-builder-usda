@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-import { StyleSheet, Text, View, Image, Pressable, TextInput } from "react-native";
+import { StyleSheet, Text, View, Pressable, TextInput } from "react-native";
 import { Card } from "react-native-paper";
 import { Entypo } from '@expo/vector-icons'; 
 import FoodCardBase from './FoodCardBase';
@@ -10,7 +10,7 @@ export default function FoodCard(props: any) {
     const [isPressed, setIsPressed] = useState<Boolean>(false)
 
     function nameMain() {
-        nameSub();
+        if (props.name === undefined) return
         return (props.name.split(","))[0]
     }
 
@@ -48,7 +48,7 @@ export default function FoodCard(props: any) {
 
         // from 'Meals' tab
         else if (props.mode===2) {
-           props.callback(props.id, props.name, props.image)
+           props.callback(props.id, props.name, props.nutrition)
         }
 
         // if nutritional value is being viewed
@@ -76,7 +76,9 @@ export default function FoodCard(props: any) {
                         { (props.mode===1) &&
                             <View style={styles.infoTextView}>
                                 <View style={(isPressed) ? styles.pressedTitleView:styles.unpressedTitleView}>
-                                    <Text numberOfLines={2} style={styles.titleText}>{props.name}</Text>
+                                    <Text numberOfLines={1} style={styles.titleText}>{nameMain()}</Text>
+                                    <Text numberOfLines={1} style={styles.subText}>{nameSub()}</Text>
+                                    <FoodCardBase name={props.name} nutrition={props.nutrients}></FoodCardBase>
                                 </View>
                                 { (isPressed) 
                                 ? 
@@ -90,7 +92,7 @@ export default function FoodCard(props: any) {
                                         keyboardType={"numeric"} 
                                         returnKeyType="done" 
                                         onSubmitEditing={(value) => showMoreInfo(value.nativeEvent.text) } 
-                                        placeholder={"150g"}>
+                                        placeholder={"100g"}>
                                     </TextInput>
                                     
                                 </View>
@@ -133,13 +135,13 @@ const styles = StyleSheet.create({
     },
     card_pressed: {
         borderColor: '#22a811',
-        borderWidth: 2.5,
+        borderWidth: 1,
         borderRadius: 5,
         backgroundColor: 'white',
         margin: 5,
         marginLeft: 15,
         marginRight: 15,
-        height: 125,
+        height: 130,
         width: '92.5%'
     },
     image: {
@@ -153,10 +155,10 @@ const styles = StyleSheet.create({
         backgroundColor: 'white'
     },
     unpressedTitleView: {
-        width: '100%'
+        width: '80%'
     },
     pressedTitleView: {
-        width: '65%'
+        width: '80%'
     },
     titleText: {
         textTransform: 'capitalize',
@@ -176,11 +178,11 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     infoTextView: {
-        width: '72,5%',
+        width: '100%',
         flexDirection: 'row'
     },
     quantityView: {
-        width: '35%',
+        width: '20%',
         justifyContent: 'center',
         alignItems: 'center'
     },

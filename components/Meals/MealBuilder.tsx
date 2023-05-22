@@ -64,6 +64,7 @@ export default function MealBuilder({ navigation, route }: any) {
         
         // deep copy to prevent editing other meals
         const selectedFood = JSON.parse(JSON.stringify(quicklist[index]))
+        const baseQuantity = 100
 
         // removing a food
         if (mode === 1) {
@@ -76,7 +77,7 @@ export default function MealBuilder({ navigation, route }: any) {
         // adding a food
         else if (mode === 2 && quantity === -1) {
             selectedFood["multiplier"]=1
-            selectedFood["quantity"]=selectedFood["weightPerServing"]["amount"]
+            selectedFood["quantity"]=baseQuantity
             setCurrentMeal({
                 ...currentMeal,
                 foods: [
@@ -90,7 +91,7 @@ export default function MealBuilder({ navigation, route }: any) {
             currentMeal["foods"].map((foodItem: any) => {
                 if (selectedFood["name"]===foodItem["name"]) {
                     // set new quantity and multiplier 
-                    const multiplier = quantity/selectedFood["weightPerServing"]["amount"]
+                    const multiplier = quantity/baseQuantity
 
                     foodItem["multiplier"]=multiplier;
                     foodItem["quantity"]=quantity
@@ -108,126 +109,126 @@ export default function MealBuilder({ navigation, route }: any) {
         // this tag combines the nutritional data from each food into a single object
         let foods = currentMeal["foods"]
 
-        let overallNutrients: any = {}, overallCost: any = {}, overallFlavonoids: any = {}
-        let currentFoodNutrients, currentFoodCost;
+        let macros: any = {}
+        let micros: any = {}
+        let other: any = {}
+        let currentFoodNutrients
 
         let multiplier: number;
         let amount: number;
-        let percentOfDailyNeeds: number;
-        let tempPercentOfDailyNeeds: number;
-        let flavonoid: any;
 
         foods.forEach((foodItem: any, i: number) => {
 
             multiplier = foodItem["multiplier"]
             if (i == 0) {
-
                 // use the first foods data as a template
-                foodItem["nutrients"].forEach((nutrient: any) => {
-                    overallNutrients[nutrient["name"]] = {
-                        name: nutrient["name"],
-                        amount: Number((nutrient["amount"]*multiplier).toFixed(2)),
-                        percentOfDailyNeeds: Number((nutrient["percentOfDailyNeeds"]*multiplier).toFixed(2)),
-                        unit: nutrient["unit"]
+                foodItem["nutrition"].forEach((nutrient: any) => {
+
+                    // sort nutrients in their respective buckets
+                    if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) {
+                        macros[nutrient["nutrientName"]] = {
+                            nutrientName: nutrient["nutrientName"],
+                            value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                            unitName: nutrient["unitName"]
+                        }
+                    }
+                    else if (nutrient.nutrientNumber < 605) {
+                        micros[nutrient["nutrientName"]] = {
+                            nutrientName: nutrient["nutrientName"],
+                            value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                            unitName: nutrient["unitName"]
+                        }
+                    } 
+                    else {
+                        other[nutrient["nutrientName"]] = {
+                            nutrientName: nutrient["nutrientName"],
+                            value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                            unitName: nutrient["unitName"]
+                        }
                     }
                 })
-
-                foodItem["flavonoids"].forEach((flavonoid: any) => {
-
-                    tempPercentOfDailyNeeds = flavonoid["percentOfDailyNeeds"]*multiplier;
-                    if (isNaN(percentOfDailyNeeds)) tempPercentOfDailyNeeds=0;
-
-                    overallFlavonoids[flavonoid["name"]] = {
-                        name: flavonoid["name"],
-                        amount: flavonoid["amount"]*multiplier,
-                        percentOfDailyNeeds: tempPercentOfDailyNeeds,
-                        unit: flavonoid["unit"]
-                    }
-                })
-
-                overallCost = JSON.parse(JSON.stringify(foodItem["cost"]))
             }
-
+            
             else {
 
-                currentFoodNutrients = foodItem["nutrients"];
-                currentFoodCost = foodItem["cost"];
-
-                // sum up cost
-                if (overallCost["unit"]===currentFoodCost["unit"]) overallCost["value"] += Number((currentFoodCost["value"]*multiplier).toFixed(2))
-
-                // remove this later
-                else {
-                    console.error("Mismatching cost units")
-                }
+                currentFoodNutrients = foodItem["nutrition"];
 
                 // sum up nutrients
                 currentFoodNutrients.map((nutrient: any) => {
 
-                    if (overallNutrients[nutrient["name"]]===undefined) {
-                        overallNutrients[nutrient["name"]] = {
-                            name: nutrient["name"],
-                            amount: Number((nutrient["amount"]*multiplier).toFixed(2)),
-                            percentOfDailyNeeds: Number((nutrient["percentOfDailyNeeds"]*multiplier).toFixed(2)),
-                            unit: nutrient["unit"]
+                    // sum macros
+                    if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) {
+                        if (macros[nutrient["nutrientName"]]===undefined) {
+                            macros[nutrient["nutrientName"]] = {
+                                nutrientName: nutrient["nutrientName"],
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+                        else {
+                            amount = macros[nutrient["nutrientName"]]["amount"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                            macros[nutrient["nutrientName"]] = {
+                                ...macros[nutrient["nutrientName"]],
+                                value: amount,
+                            }
                         }
                     }
+
+                    // sum micros
+                    else if (nutrient.nutrientNumber < 605) {
+                        if (micros[nutrient["nutrientName"]]===undefined) {
+                            micros[nutrient["nutrientName"]] = {
+                                nutrientName: nutrient["nutrientName"],
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+                        else {
+                            amount = micros[nutrient["nutrientName"]]["amount"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                            micros[nutrient["nutrientName"]] = {
+                                ...micros[nutrient["nutrientName"]],
+                                value: amount,
+                            }
+                        }
+                    } 
+
+                    // sum other
                     else {
-                        amount = overallNutrients[nutrient["name"]]["amount"] +  Number((nutrient["amount"]*multiplier).toFixed(2))
-                        percentOfDailyNeeds = overallNutrients[nutrient["name"]]["percentOfDailyNeeds"] + Number((nutrient["percentOfDailyNeeds"]*multiplier).toFixed(2))
-                        overallNutrients[nutrient["name"]] = {
-                            ...overallNutrients[nutrient["name"]],
-                            amount: amount,
-                            percentOfDailyNeeds: percentOfDailyNeeds 
+                        if (other[nutrient["nutrientName"]]===undefined) {
+                            other[nutrient["nutrientName"]] = {
+                                nutrientName: nutrient["nutrientName"],
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+                        else {
+                            amount = other[nutrient["nutrientName"]]["amount"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                            other[nutrient["nutrientName"]] = {
+                                ...other[nutrient["nutrientName"]],
+                                value: amount,
+                            }
                         }
                     }
                 })
-                
-                // sum up flavonoids
-                for (let index in overallFlavonoids) {
-
-                    flavonoid = overallFlavonoids[index]
-
-                    tempPercentOfDailyNeeds = flavonoid["percentOfDailyNeeds"]*multiplier;
-                    if (isNaN(percentOfDailyNeeds)) tempPercentOfDailyNeeds=0;
-
-                    if (overallFlavonoids[flavonoid["name"]]===undefined) {
-                        overallFlavonoids[flavonoid["name"]] = {
-                            name: flavonoid["name"],
-                            amount: flavonoid["amount"]*multiplier,
-                            percentOfDailyNeeds: tempPercentOfDailyNeeds,
-                            unit: flavonoid["unit"]
-                        }
-                    }
-                    else {
-                        amount = overallFlavonoids[flavonoid["name"]]["amount"]
-                        percentOfDailyNeeds = overallFlavonoids[flavonoid["name"]]["percentOfDailyNeeds"]
-                        overallFlavonoids[flavonoid["name"]] = {
-                            ...overallFlavonoids[flavonoid["name"]],
-                            amount: amount + flavonoid["amount"]*multiplier,
-                            percentOfDailyNeeds: percentOfDailyNeeds + tempPercentOfDailyNeeds
-                        }
-                    }
-                }
-
-
             }
         })
 
         // convert to arrays so tables can parse data
-        const overallNutrientsArray = Object.values(overallNutrients)
-        const overallFlavonoidsArray = Object.values(overallFlavonoids)
+        const macrosData = Object.values(macros)
+        const microsData = Object.values(micros)
+        const otherData = Object.values(other)
 
         // return a modified meal with the new data to store in the meal list
         const tempMeal = {
             ...currentMeal,
             data: {
-                nutrients: overallNutrientsArray,
-                cost: overallCost,
-                flavonoids: overallFlavonoidsArray
+                macros: macrosData,
+                micros: microsData,
+                other: otherData
             }
         }
-
+        console.log(1)
+        // console.log(tempMeal["data"])
         return tempMeal;
     }
 
@@ -350,7 +351,7 @@ export default function MealBuilder({ navigation, route }: any) {
                             </View> 
                             {
                                 quicklist.map((food: any, i: number) => {
-                                    return <FoodCard key={i} arrayIndex={i} id={food["id"]} image={food["image"]} name={food["name"]} callback={editMeal} mode={1}></FoodCard>
+                                    return <FoodCard key={i} arrayIndex={i} id={food.id} name={food.name} nutrients={food.nutrition}  callback={editMeal} mode={1}></FoodCard>
                                 })
                             }
                         </ScrollView>

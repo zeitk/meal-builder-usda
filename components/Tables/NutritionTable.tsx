@@ -13,21 +13,22 @@ export default function NutritionTable(props: any) {
     const headersMap = useContext(HeadersContext)
 
     useEffect(() => {
-
         let nutrition = props.nutrition;
-
         if (nutrition===undefined) return
 
+        setNutrients(nutrition);
+        getHeaders();
+        setMultiplier(props.multiplier);
+        
+    }, [props])
+
+    function getHeaders() {
         let paramHeaders:string[] = [];
         for (let header of headersMap.keys()) {
             paramHeaders.push(header);
         }
-
-        setNutrients(nutrition);
-        setHeaders(paramHeaders); 
-        setMultiplier(props.multiplier)
-        
-    }, [props])
+        setHeaders(paramHeaders);
+    }
 
     return <>
         {
@@ -69,7 +70,7 @@ export default function NutritionTable(props: any) {
 
                                                 let displayUnit:string; 
 
-                                                // kJ is always in index 1 and we want to keep the casing there
+                                                // keep kJ casing
                                                 if (nutrient[index] === "kJ") {
                                                     displayUnit = nutrient[index];
                                                 }
@@ -114,6 +115,7 @@ const styles = StyleSheet.create({
         textTransform: 'capitalize'
     },
     overallView: {
+        flex: 1,
         height: '100%',
         width: '100%'
     },

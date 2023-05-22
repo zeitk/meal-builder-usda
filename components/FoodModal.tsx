@@ -9,17 +9,7 @@ import { IFood } from '../interfaces/Interfaces';
 import MealServingInput from './Meals/MealServingInput';
 import NutritionTable from "./Tables/NutritionTable";
 import ServingSizeTable from "./Tables/ServingSizeTable";
-
-const headerMap: Map<string, string> = new Map<string, string>([
-    ["Name", "nutrientName"],
-    ["Amount", "value"],
-    ["Unit","unitName"]
-]);
-
-let paramHeaders:string[] = [];
-for (let header of headerMap.keys()) {
-    paramHeaders.push(header);
-}
+import HeadersContext from '../context/DataHeaders';
 
 export default function FoodModal(props: any) {
 
@@ -32,6 +22,8 @@ export default function FoodModal(props: any) {
     const [macros, setMacros] = useState<any>({});
     const [micros, setMicros] = useState<any>({});
     const [other, setOther] = useState<any>({});
+    const [headers, setHeaders] = useState<string[]>([]);
+    const headersMap = useContext(HeadersContext)
 
     // re-render when new food is selected
     useEffect(() => {
@@ -39,6 +31,7 @@ export default function FoodModal(props: any) {
         setPage(1);
         (props.context==="MealInfo") ? setMultiplier(props.servings["multiplier"]):setMultiplier(1);
         sortNutrients()
+        getHeaders();
     }, [props])
 
     // callback to hide modal
@@ -52,6 +45,14 @@ export default function FoodModal(props: any) {
 
     function prevPage() {
         if (page > 1) setPage(page - 1)
+    }
+
+    function getHeaders() {
+        let paramHeaders:string[] = [];
+        for (let header of headersMap.keys()) {
+            paramHeaders.push(header);
+        }
+        setHeaders(paramHeaders)
     }
 
     function sortNutrients() {
@@ -81,6 +82,7 @@ export default function FoodModal(props: any) {
                 return(-1)
             }
             else if (b.nutrientName.includes("Energy")) return(1)
+            
             else if (a.nutrientName==="Total lipid (fat)") return(-1)
             else if (b.nutrientName==="Total lipid (fat)") return(1)
 
@@ -204,7 +206,7 @@ export default function FoodModal(props: any) {
     }
 
     function addToMeal() {
-        props.editMealFoods(multiplier);
+        props.editMealFoods(multiplier, props);
         Alert.alert("Added", capitalize(props.name)+" has been added to the current meal")
     }
 
@@ -243,9 +245,9 @@ export default function FoodModal(props: any) {
                         </View>
                         <View style={styles.servingSizeView}>
                             { (props.context==="Home") ?
-                                <MealServingInput headers={paramHeaders} newServingQuantity={newMultiplier} multiplier={100} context="Home"></MealServingInput>
+                                <MealServingInput headers={headers} newServingQuantity={newMultiplier} multiplier={100} context="Home"></MealServingInput>
                                 :
-                                <ServingSizeTable headers={paramHeaders} baseServing={100} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
+                                <ServingSizeTable headers={headers} baseServing={100} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
                             }
                         </View>
                     </View>
@@ -253,7 +255,7 @@ export default function FoodModal(props: any) {
                         (page === 1) &&
                         (
                             <View style={styles.nutritionView}>
-                                <NutritionTable headers={paramHeaders} nutrition={macros} multiplier={multiplier} type={"macros"}></NutritionTable>
+                                <NutritionTable headers={headers} nutrition={macros} multiplier={multiplier} type={"macros"}></NutritionTable>
                             </View>
                         ) 
                     }
@@ -261,7 +263,7 @@ export default function FoodModal(props: any) {
                         (page == 2 && micros.length > 0) &&
                         (
                             <View style={styles.nutritionView}>
-                                <NutritionTable headers={paramHeaders} nutrition={micros} multiplier={multiplier}></NutritionTable>
+                                <NutritionTable headers={headers} nutrition={micros} multiplier={multiplier}></NutritionTable>
                             </View>
                         )
                     }
@@ -269,7 +271,7 @@ export default function FoodModal(props: any) {
                         (page == 3 && other.length > 0) &&
                         (
                             <View style={styles.nutritionView}>
-                                <NutritionTable headers={paramHeaders} nutrition={other} multiplier={multiplier}></NutritionTable>
+                                <NutritionTable headers={headers} nutrition={other} multiplier={multiplier}></NutritionTable>
                             </View>                     
                         )
                     }

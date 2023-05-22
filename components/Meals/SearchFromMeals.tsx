@@ -28,10 +28,8 @@ export default function SearchFromMeals(props: any) {
     const [exampleBanner, setExampleBanner] = useState<String>("")
     const [nutrition, setNutrition] = useState<any>({})
     const [modalVisible, setModalVisible] = useState<boolean>(false);
-    const [cost, setCost] = useState<any>([]);
     const [currentId, setCurrentId] = useState<string>("");
     const [currentName, setCurrentName] = useState<string>("");
-    const [currentImage, setCurrentImage] = useState<string>("");
     const [currentIsInMeal, setCurrentIsInMeal] = useState<boolean>(false);
 
     // meal related context
@@ -47,22 +45,16 @@ export default function SearchFromMeals(props: any) {
         setExampleBanner(searchExample)
     },[])
 
-    function editMealFoods(multiplier: number) {
-        
+    function editMealFoods(multiplier: number, food: IFood) {
+
         // TODO: more graceful error
         if (currentMeal===null) return
-
-        // deep copy current food to prevent pointer issues
-        let foodObject = JSON.parse(JSON.stringify(nutrition))
-        foodObject["cost"] = cost;
-        foodObject["name"] = currentName;
-        foodObject["image"] = currentImage
-        foodObject["id"] = currentId;
+        if (Object.keys(food.nutrition).length === 0) return
 
         // deep copy to prevent pointer issues
-        let selectedFood = JSON.parse(JSON.stringify(foodObject))
+        let selectedFood = JSON.parse(JSON.stringify(food))
         selectedFood["multiplier"] = multiplier;
-        selectedFood["quantity"]= selectedFood["weightPerServing"]["amount"]*multiplier 
+        selectedFood["quantity"]= 100*multiplier 
 
         if (multiplier > 0) {
             setCurrentMeal({
@@ -95,18 +87,18 @@ export default function SearchFromMeals(props: any) {
 
     // search for foods and update state
     const searchItems = ((input: any) => {
-
         const params = {
             query: input,
             addChildre: 'true',
-            metaInformation: 'true',
-            sort: 'calories',
+            dataType: 'Foundation,SR Legacy',
+            sortBy: 'dataType.keyword',
             sortDirection: 'asc',
-            number: '25',
-            apiKey: '206c039ac4b7451fb2947d93c4a1f8d4'
+            pageSize: '10',
+            api_key: 'DNItjU0i2C3igYQ0on5Gg28ES7YKTcKhY6ldRNtM'
         };
 
-        let url = "https://api.spoonacular.com/food/ingredients/search?";
+        //let url = "https://api.spoonacular.com/food/ingredients/search?";
+        let url = "https://api.nal.usda.gov/fdc/v1/foods/search?";
         url += (new URLSearchParams(params)).toString()
 
         fetch(url, {
@@ -117,8 +109,9 @@ export default function SearchFromMeals(props: any) {
         })
             .then(res => res.json())
             .then(json => {
-                sortItems(json.results)
-                setTotalItems(json.totalResults);
+                setTotalItems(json.totalHits);
+                if (json.totalHits === 0) return;
+                sortItems(json.foods)
             })
         scrollRef.current?.scrollTo({
             y: 0,
@@ -128,54 +121,24 @@ export default function SearchFromMeals(props: any) {
 
     function sortItems(items: any) {
         // sort foods by category before storing
-        items.sort((a: any, b: any) => a["aisle"].localeCompare(b["aisle"]))
+        items.sort((a: any, b: any) => {
+            if (a["foodCategory"]===undefined || a["foodCategory"]===null) return b
+            else if (b["foodCategory"]===undefined || b["foodCategory"]===null) return a
+            else return a["foodCategory"].localeCompare(b["foodCategory"])
+        })
         setItems(items)
     }
 
-    function moreInfo(id: number, name: string, image: string) {
-
-        // don't fetch if we already have the info
-        if (id.toString()!==currentId) {
-
-            const params = {
-                amount: '150',
-                unit: 'grams',
-                apiKey: '206c039ac4b7451fb2947d93c4a1f8d4'
-            };
-
-            let url = "https://api.spoonacular.com/food/ingredients/"
-            url += id.toString() + "/information?" + (new URLSearchParams(params)).toString()
-
-            fetch(url, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            })
-                .then(res => res.json())
-                .then(json => {
-                    setNutrition(json.nutrition)
-                    setCost(json.estimatedCost);
-            })
-
-            // info is retrieved, show modal. Store ID of food to prevent additional API calls
-            setCurrentId(id.toString())
-            isCurrentInMeal(id.toString())
-            setCurrentName(name);
-            setCurrentImage(image)
-            setModalVisible(true);
-            props.toggleButtons()
-        }
-
-        // we already have the info, just show it
-        else {
-            setModalVisible(true);
-            props.toggleButtons()
-        }
+    function moreInfo(id: number, name: string, nutrients: any) {
+        isCurrentInMeal(id.toString())
+        setNutrition(nutrients)
+        setCurrentId(id.toString())
+        setCurrentName(name);
+        setModalVisible(true);
+        props.toggleButtons()
     }
 
     function isCurrentInMeal(id: String) {
-
         // TODO: more graceful error
         if (currentMeal===null) return
 
@@ -220,24 +183,25 @@ export default function SearchFromMeals(props: any) {
                 )}
                 {
                     items.map((item: IFood, i: number) => {
-                        if (i === 0 || (i > 0 && items[i-1]["aisle"]!==items[i]["aisle"])) {
-                            // if a new category is beginning, display category name
+
+                        if (i === 0 || (i > 0 && items[i-1]["foodCategory"]!==items[i]["foodCategory"])) {
+
                             return(
                                 <View key={i} >
                                     <View style={styles.exampleBanner}>
-                                        <Text style={styles.foodCateogoryText}>{item["aisle"]}</Text>
+                                        <Text style={styles.foodCateogoryText}>{item["foodCategory"]}</Text>
                                     </View>
-                                    <FoodCard id={item.id} image={item.image} name={item.name} callback={moreInfo} mode={0}></FoodCard>
+                                    <FoodCard id={item.fdcId} name={item.description} nutrients={item.foodNutrients} callback={moreInfo} mode={0}></FoodCard>
                                 </View>
                             )
                         }
-                        else return <FoodCard key={i} id={item.id} image={item.image} name={item.name} callback={moreInfo} mode={0}></FoodCard>
+                        else return <FoodCard key={i} id={item.fdcId} name={item.description} nutrients={item.foodNutrients} callback={moreInfo} mode={0}></FoodCard>
                     })
                 }
             </ScrollView>
 
             <Portal.Host>
-                <FoodModal nutrition={nutrition} name={currentName} cost={cost} id={currentId} image={currentImage} editMealFoods={editMealFoods} toggle={toggleModal} modalVisible={modalVisible} isInMeal={currentIsInMeal} context={"MealBuilder"}></FoodModal>
+                <FoodModal nutrition={nutrition} name={currentName} id={currentId} editMealFoods={editMealFoods} toggle={toggleModal} modalVisible={modalVisible} isInMeal={currentIsInMeal} context={"MealBuilder"}></FoodModal>
             </Portal.Host>
 
         </SafeAreaView>

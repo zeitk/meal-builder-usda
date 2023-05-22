@@ -27,10 +27,8 @@ export default function Search({ navigation } : any) {
     const [exampleBanner, setExampleBanner] = useState<String>("")
     const [nutrition, setNutrition] = useState<any>({})
     const [modalVisible, setModalVisible] = useState<boolean>(false);
-    const [cost, setCost] = useState<any>([]);
     const [currentId, setCurrentId] = useState<string>("");
     const [currentName, setCurrentName] = useState<string>("");
-    const [currentImage, setCurrentImage] = useState<string>("");
 
     useEffect(() => {
         
@@ -84,9 +82,9 @@ export default function Search({ navigation } : any) {
         })
             .then(res => res.json())
             .then(json => {
+                setTotalItems(json.totalHits);
                 if (json.totalHits === 0) return;
                 sortItems(json.foods)
-                setTotalItems(json.totalHits);
             })
         scrollRef.current?.scrollTo({
             y: 0,
@@ -97,16 +95,14 @@ export default function Search({ navigation } : any) {
     function sortItems(items: any) {
         // sort foods by category before storing
         items.sort((a: any, b: any) => {
-            if (a["foodCategory"]===null) return b
-            else if (b["foodCategory"]===null) return a
+            if (a["foodCategory"]===undefined || a["foodCategory"]===null) return b
+            else if (b["foodCategory"]===undefined || b["foodCategory"]===null) return a
             else return a["foodCategory"].localeCompare(b["foodCategory"])
         })
-        console.log(items[1].foodNutrients);
         setItems(items)
     }
 
     function moreInfo(id: number, name: string, nutrition: any) {
-
         setNutrition(nutrition)
         setCurrentId(id.toString())
         setCurrentName(name);
@@ -138,11 +134,11 @@ export default function Search({ navigation } : any) {
                 )}
                 {
                     items.map((item: any, i: number) => {
-                        if (i === 0 || (i > 0 && items[i-1]["aisle"]!==items[i]["aisle"])) {
+                        if (i === 0 || (i > 0 && items[i-1]["foodCategory"]!==items[i]["foodCategory"])) {
                             return(
                                 <View key={i} >
                                     <View style={styles.exampleBanner}>
-                                        <Text style={styles.foodCateogoryText}>{item["aisle"]}</Text>
+                                        <Text style={styles.foodCateogoryText}>{item["foodCategory"]}</Text>
                                     </View>
                                     <FoodCard id={item.fdcId} name={item.description} nutrients={item.foodNutrients} callback={moreInfo} mode={0}></FoodCard>
                                 </View>
@@ -154,7 +150,7 @@ export default function Search({ navigation } : any) {
             </ScrollView>
 
             <Portal.Host>
-                <FoodModal nutrition={nutrition} name={currentName} cost={cost} id={currentId} image={currentImage} toggle={toggleModal} modalVisible={modalVisible} context={"Search"}></FoodModal>
+                <FoodModal nutrition={nutrition} name={currentName} id={currentId} toggle={toggleModal} modalVisible={modalVisible} context={"Search"}></FoodModal>
             </Portal.Host>
 
         </SafeAreaView>

@@ -6,8 +6,6 @@ import { Button, Portal } from "react-native-paper";
 import { StatusBar } from 'expo-status-bar';
 import { useMealList } from "../../context/MealList";
 import FoodCard from "../FoodCard";
-import CostTable from "../Tables/CostTable";
-import FlavonoidsTable from "../Tables/FlavonoidsTable";
 import NutritionTable from "../Tables/NutritionTable";
 import FoodModal from "../FoodModal";
 import { IMeal } from "../../interfaces/Interfaces";
@@ -129,13 +127,7 @@ export default function MealInfo({ navigation, route }: any) {
                     quantity: food["quantity"],
                     multiplier: food["multiplier"]
                 })
-                setViewedFoodNutrition({
-                    caloricBreakdown: food["caloricBreakdown"],
-                    flavonoids: food["flavonoids"],
-                    nutrients: food["nutrients"],
-                    properties: food["properties"],
-                    weightPerServing: food["weightPerServing"]
-                })
+                setViewedFoodNutrition(food["nutrition"])
                 setFoodModalVisible(true)
             }
         })
@@ -157,7 +149,7 @@ export default function MealInfo({ navigation, route }: any) {
                 if (newMultiplier>=0) {
                     updatedFoods = meal["foods"].map((food: any) => {
                         if (food["id"] === viewedFoodId) {
-                            const newQuantity = (food["weightPerServing"]["amount"]*newMultiplier).toFixed(2);
+                            const newQuantity = (food["quantity"]*newMultiplier).toFixed(2);
                             return({
                                 ...food,
                                 quantity: newQuantity,
@@ -209,14 +201,11 @@ export default function MealInfo({ navigation, route }: any) {
 
         let foods = updatedFoods
 
-        let overallNutrients: any = {}, overallCost: any = {}, overallFlavonoids: any = {}
-        let currentFoodNutrients, currentFoodCost;
+        let overallNutrients: any = {}
+        let currentFoodNutrients;
 
         let multiplier: number;
         let amount: number;
-        let percentOfDailyNeeds: number;
-        let tempPercentOfDailyNeeds: number;
-        let flavonoid: any;
 
         foods.forEach((foodItem: any, i: number) => {
 
@@ -224,108 +213,47 @@ export default function MealInfo({ navigation, route }: any) {
 
             // use the first foods data as a template
             if (i == 0) {
-                
-                foodItem["nutrients"].forEach((nutrient: any) => {
+                foodItem["nutrition"].forEach((nutrient: any) => {
                     overallNutrients[nutrient["name"]] = {
                         name: nutrient["name"],
-                        amount: Number((nutrient["amount"]*multiplier).toFixed(2)),
-                        percentOfDailyNeeds: Number((nutrient["percentOfDailyNeeds"]*multiplier).toFixed(2)),
-                        unit: nutrient["unit"]
+                        amount: Number((nutrient["value"]*multiplier).toFixed(2)),
+                        unit: nutrient["unitName"]
                     }
                 })
-
-                foodItem["flavonoids"].forEach((flavonoid: any) => {
-
-                    tempPercentOfDailyNeeds = flavonoid["percentOfDailyNeeds"]*multiplier;
-                    if (isNaN(percentOfDailyNeeds)) tempPercentOfDailyNeeds=0;
-
-                    overallFlavonoids[flavonoid["name"]] = {
-                        name: flavonoid["name"],
-                        amount: flavonoid["amount"]*multiplier,
-                        percentOfDailyNeeds: tempPercentOfDailyNeeds,
-                        unit: flavonoid["unit"]
-                    }
-                })
-
-                overallCost = JSON.parse(JSON.stringify(foodItem["cost"]))
             }
 
             // for subsequent foods either modify an existing value, or create a new one
             else {
 
                 currentFoodNutrients = foodItem["nutrients"];
-                currentFoodCost = foodItem["cost"];
-
-                // sum up cost
-                if (overallCost["unit"]===currentFoodCost["unit"]) overallCost["value"] += Number((currentFoodCost["value"]*multiplier).toFixed(2))
-
-                // hasn't happened yet, but should be on the watchout
-                else {
-                    console.error("Mismatching cost units")
-                }
 
                 // sum up nutrients
                 currentFoodNutrients.map((nutrient: any) => {
 
                     if (overallNutrients[nutrient["name"]]===undefined) {
-                        overallNutrients[nutrient["name"]] = {
+                        overallNutrients[nutrient["nutrientName"]] = {
                             name: nutrient["name"],
-                            amount: Number((nutrient["amount"]*multiplier).toFixed(2)),
-                            percentOfDailyNeeds: Number((nutrient["percentOfDailyNeeds"]*multiplier).toFixed(2)),
-                            unit: nutrient["unit"]
+                            amount: Number((nutrient["value"]*multiplier).toFixed(2)),
+                            unit: nutrient["unitName"]
                         }
                     }
                     else {
-                        amount = overallNutrients[nutrient["name"]]["amount"] +  Number((nutrient["amount"]*multiplier).toFixed(2))
-                        percentOfDailyNeeds = overallNutrients[nutrient["name"]]["percentOfDailyNeeds"] + Number((nutrient["percentOfDailyNeeds"]*multiplier).toFixed(2))
-                        overallNutrients[nutrient["name"]] = {
+                        amount = overallNutrients[nutrient["name"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                        overallNutrients[nutrient["nutrientName"]] = {
                             ...overallNutrients[nutrient["name"]],
                             amount: amount,
-                            percentOfDailyNeeds: percentOfDailyNeeds 
                         }
                     }
                 })
-                
-                // sum up flavonoids
-                for (let index in overallFlavonoids) {
-
-                    flavonoid = overallFlavonoids[index]
-
-                    tempPercentOfDailyNeeds = flavonoid["percentOfDailyNeeds"]*multiplier;
-                    if (isNaN(percentOfDailyNeeds)) tempPercentOfDailyNeeds=0;
-
-                    if (overallFlavonoids[flavonoid["name"]]===undefined) {
-                        overallFlavonoids[flavonoid["name"]] = {
-                            name: flavonoid["name"],
-                            amount: flavonoid["amount"]*multiplier,
-                            percentOfDailyNeeds: tempPercentOfDailyNeeds,
-                            unit: flavonoid["unit"]
-                        }
-                    }
-                    else {
-                        amount = overallFlavonoids[flavonoid["name"]]["amount"]
-                        percentOfDailyNeeds = overallFlavonoids[flavonoid["name"]]["percentOfDailyNeeds"]
-                        overallFlavonoids[flavonoid["name"]] = {
-                            ...overallFlavonoids[flavonoid["name"]],
-                            amount: amount + flavonoid["amount"]*multiplier,
-                            percentOfDailyNeeds: percentOfDailyNeeds + tempPercentOfDailyNeeds
-                        }
-                    }
-                }
-
-
             }
         })
 
         // convert to arrays since our tables parse arrays
         const overallNutrientsArray = Object.values(overallNutrients)
-        const overallFlavonoidsArray = Object.values(overallFlavonoids)
 
         // return updated data to replace old data in meal
         const newData = {
             nutrients: overallNutrientsArray,
-            cost: overallCost,
-            flavonoids: overallFlavonoidsArray
         }
 
         return newData;
@@ -382,7 +310,7 @@ export default function MealInfo({ navigation, route }: any) {
                     <ScrollView style={viewStyles.scroll}>
                     {
                         foods.map((food: any, i: number) => {
-                            return <FoodCard key={i} id={food["id"]} image={food["image"]} callback={moreFoodInfo} name={food["name"]} quantity={food["quantity"]} mode={2}></FoodCard>
+                            return <FoodCard key={i} id={food["id"]} nutrients={food.nutrition} callback={moreFoodInfo} name={food["name"]} quantity={food["quantity"]} mode={2}></FoodCard>
                         })
                     }
                     </ScrollView>
@@ -405,10 +333,8 @@ export default function MealInfo({ navigation, route }: any) {
                 (
                     <View style={viewStyles.middle}>
                         <View style={viewStyles.cost}>
-                            <CostTable cost={cost} multiplier={multiplier}></CostTable>
                         </View>
                         <View style={viewStyles.flavonoids}>
-                            <FlavonoidsTable flavonoidsProps={flavonoids} multiplier={multiplier} isMealView={true}></FlavonoidsTable>
                         </View>
                     </View>
                 )
