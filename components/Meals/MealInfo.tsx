@@ -16,6 +16,7 @@ export default function MealInfo({ navigation, route }: any) {
 
     // states
     const [page, setPage] = useState<number>(1);
+    const [maxPage, setMaxPage] = useState<number>(3);
     const [multiplier, setMultiplier] = useState<number>(1);
     const [isNameEditing, setIsNameEditing] = useState<boolean>(false)
     const {mealList, setMealList} = useMealList();
@@ -24,7 +25,6 @@ export default function MealInfo({ navigation, route }: any) {
     // modal related states
     const [viewedFoodId, setViewedFoodId] = useState<number>()
     const [viewedFoodName, setViewedFoodName] = useState<string>()
-    const [viewedFoodImage, setViewedFoodImage] = useState<string>()
     const [viewedFoodNutrition, setViewedFoodNutrition] = useState<any>({});
     const [foodModalVisible, setFoodModalVisible] = useState<boolean>(false);
     const [viewedFoodServings, setViewedFoodServings] = useState<any>({})
@@ -43,15 +43,16 @@ export default function MealInfo({ navigation, route }: any) {
             return
         }
     })
-    const nutrients = mealList[mealIndex]["data"]["nutrients"]
-    const cost = mealList[mealIndex]["data"]["cost"]
-    const flavonoids = mealList[mealIndex]["data"]["flavonoids"]
+    const macros = mealList[mealIndex]["data"]["macros"]
+    const micros = mealList[mealIndex]["data"]["micros"]
+    const other = mealList[mealIndex]["data"]["other"]
     const foods = mealList[mealIndex]["foods"]
     const ref = useRef<any>(null)
 
     // set page and meal multiplier to 1
     useEffect(() => {
         setPage(1)
+        getMaxPage()
         setMultiplier(1);
         setIsNameEditing(false)
         setName(mealList[mealIndex]["name"])
@@ -69,11 +70,18 @@ export default function MealInfo({ navigation, route }: any) {
     }
 
     function nextPage() {
-        if (page < 3) setPage(page + 1)
+        if (page < maxPage) setPage(page + 1)
     }
 
     function prevPage() {
         if (page > 1) setPage(page - 1)
+    }
+
+    function getMaxPage() {
+        let max = 2;
+        if (micros.length > 0) max++;
+        if (other.length > 0) max++
+        setMaxPage(max);
     }
 
     // set new serving size
@@ -122,7 +130,6 @@ export default function MealInfo({ navigation, route }: any) {
             if (food["id"]===foodId) {
                 setViewedFoodId(food["id"])
                 setViewedFoodName(food["name"])
-                setViewedFoodImage(food["image"])
                 setViewedFoodServings({
                     quantity: food["quantity"],
                     multiplier: food["multiplier"]
@@ -323,7 +330,7 @@ export default function MealInfo({ navigation, route }: any) {
                     <View style={viewStyles.middle}>
                         <MealServingInput multiplier={multiplier} newServingQuantity={newServingQuantity}></MealServingInput>
                         <View style={viewStyles.nutrition}>
-                            <NutritionTable nutrition={nutrients} isMealView={true} multiplier={multiplier}></NutritionTable>
+                            <NutritionTable nutrition={macros} isMealView={true} multiplier={multiplier}></NutritionTable>
                         </View>
                     </View>
                 )
@@ -332,24 +339,36 @@ export default function MealInfo({ navigation, route }: any) {
                 (page == 3) &&
                 (
                     <View style={viewStyles.middle}>
-                        <View style={viewStyles.cost}>
+                        <MealServingInput multiplier={multiplier} newServingQuantity={newServingQuantity}></MealServingInput>
+                        <View style={viewStyles.nutrition}>
+                            <NutritionTable nutrition={micros} isMealView={true} multiplier={multiplier}></NutritionTable>
                         </View>
-                        <View style={viewStyles.flavonoids}>
+                    </View>
+                )
+            }
+            {
+                (page == 4) &&
+                (
+                    <View style={viewStyles.middle}>
+                        <MealServingInput multiplier={multiplier} newServingQuantity={newServingQuantity}></MealServingInput>
+                        <View style={viewStyles.nutrition}>
+                            <NutritionTable nutrition={other} isMealView={true} multiplier={multiplier}></NutritionTable>
                         </View>
                     </View>
                 )
             }
 
+
             <View style={viewStyles.lower}>      
-                <Button children={(page===3) ? "Overview":"Foods"} textColor="#2774AE" labelStyle={textStyles.button} style={buttonStyles.leftButton} onPress={()=> prevPage()} disabled={(page<2)}></Button>
-                <Text style={textStyles.pageText}>{page}</Text>
-                <Button children={(page===1) ? "Overview":"More info"} textColor="#2774AE" labelStyle={textStyles.button} style={buttonStyles.rightButton} onPress={()=> nextPage()} disabled={(page>2)}></Button>          
+                <Button children={"Prev"} textColor="#2774AE" labelStyle={textStyles.button} style={buttonStyles.leftButton} onPress={()=> prevPage()} disabled={(page<2)}></Button>
+                <Text style={textStyles.pageText}>{page} of {maxPage}</Text>
+                <Button children={"Next"} textColor="#2774AE" labelStyle={textStyles.button} style={buttonStyles.rightButton} onPress={()=> nextPage()} disabled={(page>=maxPage)}></Button>          
                 <Button children={"Close"} textColor="#c5050c" labelStyle={textStyles.button} style={buttonStyles.closeButton} onPress={()=> closeModal()}></Button>
             </View>
 
             <Portal.Host>
                 <FoodModal 
-                    nutrition={viewedFoodNutrition} name={viewedFoodName} cost={cost} id={viewedFoodId} image={viewedFoodImage} servings={viewedFoodServings} 
+                    nutrition={viewedFoodNutrition} name={viewedFoodName} id={viewedFoodId} servings={viewedFoodServings} 
                     toggle={toggleFoodModal} editMealFoods={editMealFoods} context={"MealInfo"} modalVisible={foodModalVisible}
                 ></FoodModal>
             </Portal.Host>
@@ -450,7 +469,7 @@ const textStyles = StyleSheet.create({
     },
     pageText: {
         position: 'absolute',
-        left: '35%'
+        left: '30%'
     },
     servingTextInput: {
         width: '12.5%',
@@ -468,11 +487,11 @@ const buttonStyles = StyleSheet.create({
     },
     leftButton: {
         position: 'absolute',
-        left: '5%'
+        left: '7.5%',
     },
     rightButton: {
         position: 'absolute',
-        left: '42.5%'
+        left: '47.5%',
     },
     closeButton: {
         position: 'absolute',

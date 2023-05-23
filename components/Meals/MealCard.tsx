@@ -5,6 +5,7 @@ import { Card } from "react-native-paper";
 import { Feather } from '@expo/vector-icons'; 
 import { useMealList } from '../../context/MealList';
 import { IMeal } from '../../interfaces/Interfaces'
+import FoodCardBase from '../FoodCardBase';
 
 export default function MealCard(props: any) {
 
@@ -49,6 +50,11 @@ export default function MealCard(props: any) {
           );
     }
 
+    function getMacros() {
+        if (props.data === undefined) return({})
+        return(props.data.macros)
+    }
+
     return <>
         <View>
             <Pressable onPress={showMoreInfo}>
@@ -57,6 +63,7 @@ export default function MealCard(props: any) {
                     <Card.Content style={styles.content}>
                         <View style={styles.titleView}>
                             <Text numberOfLines={2} style={styles.title}>{props.name}</Text>
+                            <FoodCardBase nutrition={getMacros()}></FoodCardBase>
                         </View>
 
                         <View style={styles.deleteButtonView}>
@@ -81,26 +88,10 @@ const styles = StyleSheet.create({
         margin: 5,
         marginLeft: 15,
         marginRight: 15,
-        height: 125,
         width: '92.5%'
     },
-    image: {
-        height: 45,
-        width: 50,
-        resizeMode: 'contain',
-        marginLeft: 1,
-    },
-    imageView: {
-        width: '33%',
-        height: '100%',
-        backgroundColor: 'white'
-    },
-    imageViewRow: {
-        backgroundColor: 'white',
-        flexDirection: 'row'
-    },
     titleView: {
-        width: '57%',
+        width: '85%',
         justifyContent: 'center',
         overflow: 'hidden'
     },
@@ -110,9 +101,10 @@ const styles = StyleSheet.create({
         textAlign: 'left',
         fontSize: 21,
         paddingLeft: 20,
+        paddingBottom: 5
     },
     deleteButtonView: {
-        width: '10%',
+        width: '15%',
         alignItems: 'center'
     },
     deleteButton: {

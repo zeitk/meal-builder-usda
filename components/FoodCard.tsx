@@ -23,6 +23,15 @@ export default function FoodCard(props: any) {
         return sub;
     }
 
+    function nameSubLength() {
+        if (props.name === undefined) return
+        let index = props.name.search(",")
+        let sub = props.name.slice(index + 2)
+        if (sub === "" || sub === undefined) return false
+        if (sub.length > 40) return true
+        return false
+    }
+
     function showMoreInfo(quantity: any) {
 
         // if food is being added to meal 
@@ -66,18 +75,18 @@ export default function FoodCard(props: any) {
                         {/* Show different displays depending on our activity */}
                         {/* Viewing from Search or Quicklist */}
                         { (props.mode===0) &&
-                            <View style={styles.unpressedTitleView}>
+                            <View style={styles.searchTitleView}>
                                 <Text numberOfLines={1} style={styles.titleText}>{nameMain()}</Text>
-                                <Text numberOfLines={1} style={styles.subText}>{nameSub()}</Text>
-                                <FoodCardBase name={props.name} nutrition={props.nutrients}></FoodCardBase>
+                                <Text numberOfLines={2} style={styles.subText}>{nameSub()}</Text>
+                                <FoodCardBase nutrition={props.nutrients}></FoodCardBase>
                             </View>
                         }
                         {/* Viewing from Meal Builder */}
                         { (props.mode===1) &&
                             <View style={styles.infoTextView}>
-                                <View style={(isPressed) ? styles.pressedTitleView:styles.unpressedTitleView}>
+                                <View style={styles.mealTitleView}>
                                     <Text numberOfLines={1} style={styles.titleText}>{nameMain()}</Text>
-                                    <Text numberOfLines={1} style={styles.subText}>{nameSub()}</Text>
+                                    <Text numberOfLines={2} style={styles.subText}>{nameSub()}</Text>
                                     <FoodCardBase name={props.name} nutrition={props.nutrients}></FoodCardBase>
                                 </View>
                                 { (isPressed) 
@@ -105,8 +114,10 @@ export default function FoodCard(props: any) {
                         { (props.mode===2) &&
                             <View style={mealStyles.mealInfoOverall}>
                                 <View style={mealStyles.mealInfoTextView}>
-                                    <Text numberOfLines={2} style={mealStyles.mealInfoTitleText}>{props.name}</Text>
+                                    <Text numberOfLines={1} style={mealStyles.mealInfoTitleText}>{nameMain()}</Text>
+                                    <Text numberOfLines={2} style={mealStyles.mealInfoSubtitleText}>{nameSub()}</Text>
                                     <Text numberOfLines={1} style={mealStyles.quantityText}>Quantity: {(Number(props.quantity)).toFixed(0)}g</Text>
+                                    <FoodCardBase nutrition={props.nutrients} quantity={(Number(props.quantity))}></FoodCardBase>
                                 </View>
                                 <View style={mealStyles.mealInfoIcon}>
                                     <Entypo name="edit" size={22} color="black" />
@@ -130,7 +141,6 @@ const styles = StyleSheet.create({
         margin: 5,
         marginLeft: 15,
         marginRight: 15,
-        height: 130,
         width: '92.5%'
     },
     card_pressed: {
@@ -141,7 +151,6 @@ const styles = StyleSheet.create({
         margin: 5,
         marginLeft: 15,
         marginRight: 15,
-        height: 130,
         width: '92.5%'
     },
     image: {
@@ -154,10 +163,10 @@ const styles = StyleSheet.create({
         height: '100%',
         backgroundColor: 'white'
     },
-    unpressedTitleView: {
-        width: '80%'
+    searchTitleView: {
+        width: '100%'
     },
-    pressedTitleView: {
+    mealTitleView: {
         width: '80%'
     },
     titleText: {
@@ -211,15 +220,22 @@ const mealStyles = StyleSheet.create({
         fontWeight: '300',
         textAlign: 'left',
         fontSize: 21,
+    },
+    mealInfoSubtitleText: {
+        textTransform: 'capitalize',
+        fontWeight: '300',
+        textAlign: 'left',
+        fontSize: 17,
         paddingBottom: 10
     },
     mealInfoIcon: {
         width: '15%',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     mealInfoOverall: {
         flexDirection: 'row',
-        width: '72.5%'
+        width: '100%'
     },
     quantityText: {
         paddingBottom: 5,

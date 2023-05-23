@@ -8,7 +8,7 @@ import CurrentMealContext from '../../context/CurrentMeal';
 import { useMealList }  from '../../context/MealList';
 import QuicklistContext from '../../context/QuicklistContext';
 import FoodCard from '../FoodCard';
-import { IMeal } from '../../interfaces/Interfaces'
+import { IMeal, INutrient } from '../../interfaces/Interfaces'
 import SearchFromMeals from './SearchFromMeals';
 
 export default function MealBuilder({ navigation, route }: any) {
@@ -126,6 +126,7 @@ export default function MealBuilder({ navigation, route }: any) {
 
                     // sort nutrients in their respective buckets
                     if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) {
+                        if (nutrient["unitName"] === "kJ") return
                         macros[nutrient["nutrientName"]] = {
                             nutrientName: nutrient["nutrientName"],
                             value: Number((nutrient["value"]*multiplier).toFixed(2)),
@@ -147,8 +148,11 @@ export default function MealBuilder({ navigation, route }: any) {
                         }
                     }
                 })
+                
+
             }
             
+
             else {
 
                 currentFoodNutrients = foodItem["nutrition"];
@@ -159,6 +163,7 @@ export default function MealBuilder({ navigation, route }: any) {
                     // sum macros
                     if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) {
                         if (macros[nutrient["nutrientName"]]===undefined) {
+                            if (nutrient["unitName"] === "kJ") return
                             macros[nutrient["nutrientName"]] = {
                                 nutrientName: nutrient["nutrientName"],
                                 value: Number((nutrient["value"]*multiplier).toFixed(2)),
@@ -166,12 +171,14 @@ export default function MealBuilder({ navigation, route }: any) {
                             }
                         }
                         else {
-                            amount = macros[nutrient["nutrientName"]]["amount"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                            if (nutrient["unitName"] === "kJ") return
+                            amount = macros[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
                             macros[nutrient["nutrientName"]] = {
                                 ...macros[nutrient["nutrientName"]],
                                 value: amount,
                             }
                         }
+                        
                     }
 
                     // sum micros
@@ -184,7 +191,7 @@ export default function MealBuilder({ navigation, route }: any) {
                             }
                         }
                         else {
-                            amount = micros[nutrient["nutrientName"]]["amount"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                            amount = micros[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
                             micros[nutrient["nutrientName"]] = {
                                 ...micros[nutrient["nutrientName"]],
                                 value: amount,
@@ -202,7 +209,7 @@ export default function MealBuilder({ navigation, route }: any) {
                             }
                         }
                         else {
-                            amount = other[nutrient["nutrientName"]]["amount"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                            amount = other[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
                             other[nutrient["nutrientName"]] = {
                                 ...other[nutrient["nutrientName"]],
                                 value: amount,
@@ -218,6 +225,9 @@ export default function MealBuilder({ navigation, route }: any) {
         const microsData = Object.values(micros)
         const otherData = Object.values(other)
 
+        // sort the arrays
+        sortNutrients(macrosData, microsData)
+
         // return a modified meal with the new data to store in the meal list
         const tempMeal = {
             ...currentMeal,
@@ -227,9 +237,54 @@ export default function MealBuilder({ navigation, route }: any) {
                 other: otherData
             }
         }
-        console.log(1)
-        // console.log(tempMeal["data"])
+
         return tempMeal;
+    }
+
+    function sortNutrients(macros: any, micros: any) {
+
+        // sort by id of macronutrient
+        macros.sort((a: any, b: any) => {
+
+            // have major macros go first
+            if (a.nutrientName.includes("Energy")) {
+                if (b.nutrientName.includes("Energy")) {
+                    if (b.unitName==="KCAL") return(1)
+                }
+                return(-1)
+            }
+            else if (b.nutrientName.includes("Energy")) return(1)
+            
+            else if (a.nutrientName==="Total lipid (fat)") return(-1)
+            else if (b.nutrientName==="Total lipid (fat)") return(1)
+
+            else if (a.nutrientName.includes("Carbohydrate")) return(-1)
+            else if (b.nutrientName.includes("Carbohydrate")) return(1)
+
+            else if (a.nutrientName==="Protein") return(-1)
+            else if (b.nutrientName==="Protein") return(1)
+
+            else if (a.nutrientName.includes("Fatty")) return(-1)
+            else if (b.nutrientName.includes("Fatty")) return(1)
+
+            else if (a.nutrientNumber<b.nutrientNumber) return(-1)
+            return(1)
+        });
+
+        // sort by id of micronutrient
+        micros.sort((a: any, b: any) => {
+             // have vitamins go first
+            if (a.nutrientName.includes("Vitamin")) {
+                if (b.nutrientName.includes("Vitamin")) {
+                    if (a.nutrientName>b.nutrientName) return(1)
+                }
+                return(-1)
+            }
+            else if (b.nutrientName.includes("Vitamin")) return(1)
+
+            else if (a.nutrientNumber<b.nutrientNumber) return(-1)
+            return(1)
+        });
     }
 
     // store updated mealList to persistant memory
@@ -351,7 +406,7 @@ export default function MealBuilder({ navigation, route }: any) {
                             </View> 
                             {
                                 quicklist.map((food: any, i: number) => {
-                                    return <FoodCard key={i} arrayIndex={i} id={food.id} name={food.name} nutrients={food.nutrition}  callback={editMeal} mode={1}></FoodCard>
+                                    return <FoodCard key={i} arrayIndex={i} id={food.id} name={food.name} nutrients={food.nutrition} callback={editMeal} mode={1}></FoodCard>
                                 })
                             }
                         </ScrollView>

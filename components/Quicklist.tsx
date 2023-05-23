@@ -41,7 +41,6 @@ export default function Quicklist({ navigation }: any) {
                 <ScrollView style={styles.scrollview}>
                 {
                     quicklist.map((food: any, i: number) => {
-                        console.log(food);
                         return <FoodCard key={i} id={food.id} name={food.name} nutrients={food.nutrition} callback={moreInfo} mode={0}></FoodCard>
                     })
                 }

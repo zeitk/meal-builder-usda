@@ -20,7 +20,7 @@ export default function Meals({ navigation }: any) {
                 <ScrollView style={styles.scrollView}>
                     {
                         mealList.map((meal: any, i: number) => {
-                            return<MealCard key={i} id={meal["id"]} name={meal["name"]} foods={meal["foods"]} navigation={navigation}></MealCard>
+                            return<MealCard key={i} id={meal["id"]} name={meal["name"]} foods={meal["foods"]} data={meal["data"]} navigation={navigation}></MealCard>
                         })
                     }
                 </ScrollView>

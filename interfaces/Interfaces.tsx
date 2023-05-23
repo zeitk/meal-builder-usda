@@ -16,3 +16,10 @@ export interface IFood {
     name: string,
     foodCategory?: string,
 }
+
+export interface INutrient {
+    [key: string]: any,
+    value: number,
+    nutrientName: string,
+    unitName: string,
+}
