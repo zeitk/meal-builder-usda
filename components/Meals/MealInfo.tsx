@@ -125,7 +125,7 @@ export default function MealInfo({ navigation, route }: any) {
         setMealList(updatedMealList)
     }
 
-    function moreFoodInfo(foodId: number, foodName: String, foodImage: String) {
+    function moreFoodInfo(foodId: number) {
         foods.forEach((food: any) => {
             if (food["id"]===foodId) {
                 setViewedFoodId(food["id"])
@@ -156,7 +156,7 @@ export default function MealInfo({ navigation, route }: any) {
                 if (newMultiplier>=0) {
                     updatedFoods = meal["foods"].map((food: any) => {
                         if (food["id"] === viewedFoodId) {
-                            const newQuantity = (food["quantity"]*newMultiplier).toFixed(2);
+                            const newQuantity = (100*newMultiplier).toFixed(2);
                             return({
                                 ...food,
                                 quantity: newQuantity,
@@ -207,63 +207,276 @@ export default function MealInfo({ navigation, route }: any) {
         // this tag combines the nutritional data from each food into a single object
 
         let foods = updatedFoods
-
-        let overallNutrients: any = {}
-        let currentFoodNutrients;
-
         let multiplier: number;
+
+        let macros: any = {}
+        let micros: any = {}
+        let other: any = {}
+        let currentFoodNutrients: any = {}
+
         let amount: number;
+
+        // used for energy to handle duplicate entries and mismatching units
+        let value: number;
+        let name: string;
+        let unit: string;
+        let energyFound: boolean;
 
         foods.forEach((foodItem: any, i: number) => {
 
             multiplier = foodItem["multiplier"]
-
-            // use the first foods data as a template
             if (i == 0) {
+                // use the first foods data as a template
+                energyFound = false;
                 foodItem["nutrition"].forEach((nutrient: any) => {
-                    overallNutrients[nutrient["name"]] = {
-                        name: nutrient["name"],
-                        amount: Number((nutrient["value"]*multiplier).toFixed(2)),
-                        unit: nutrient["unitName"]
+
+                    // sort nutrients in their respective buckets
+                    if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) {
+                        
+                        // energy needs special handling 
+                        if (nutrient.nutrientName.includes("Energy")) {
+                            if (energyFound) return
+                            if (nutrient["unitName"] === "kJ") {
+                                value = Number((nutrient["value"] * 0.239006 * multiplier).toFixed(2))
+                            }
+                            else value =  Number((nutrient["value"]*multiplier).toFixed(2))
+                            unit = "kcal"
+                            name = "Energy"
+                            energyFound = true;
+                            macros[name] = {
+                                nutrientName: name,
+                                value: value,
+                                unitName: unit
+                            }
+                        }
+                        
+                        else if (nutrient.nutrientName.includes("Carbohydrate")) {
+                            name = "Carbohydrates"
+                            macros[name] = {
+                                nutrientName: name,
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+
+                        else {
+                            macros[nutrient["nutrientName"]] = {
+                                nutrientName: nutrient["nutrientName"],
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+
+                    }
+                    else if (nutrient.nutrientNumber < 605) {
+                        micros[nutrient["nutrientName"]] = {
+                            nutrientName: nutrient["nutrientName"],
+                            value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                            unitName: nutrient["unitName"]
+                        }
+                    } 
+                    else {
+                        other[nutrient["nutrientName"]] = {
+                            nutrientName: nutrient["nutrientName"],
+                            value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                            unitName: nutrient["unitName"]
+                        }
                     }
                 })
             }
+            
 
-            // for subsequent foods either modify an existing value, or create a new one
             else {
 
-                currentFoodNutrients = foodItem["nutrients"];
-
+                currentFoodNutrients = foodItem["nutrition"];
+                energyFound = false;
                 // sum up nutrients
                 currentFoodNutrients.map((nutrient: any) => {
 
-                    if (overallNutrients[nutrient["name"]]===undefined) {
-                        overallNutrients[nutrient["nutrientName"]] = {
-                            name: nutrient["name"],
-                            amount: Number((nutrient["value"]*multiplier).toFixed(2)),
-                            unit: nutrient["unitName"]
+                    // sum macros
+                    if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) {
+
+                        name = nutrient["nutrientName"]
+                        if (name.includes("Energy")) name = "Energy"
+
+                        if (macros[name]===undefined) {
+
+                            // energy needs special handling 
+                            if (name.includes("Energy")) {
+                                if (energyFound) return
+                                if (nutrient["unitName"] === "kJ") {
+                                    value = Number((nutrient["value"] * 0.239006 * multiplier).toFixed(2))
+                                }
+                                else value =  Number((nutrient["value"]*multiplier).toFixed(2))
+                                unit = "kcal"
+                                energyFound = true;
+                                macros[name] = {
+                                    nutrientName: name,
+                                    value: value,
+                                    unitName: unit
+                                }
+                            }
+                            
+                            // carbs may be named differently
+                            else if (name.includes("Carbohydrate")) {
+                                name = "Carbohydrates"
+                                macros[name] = {
+                                    nutrientName: name,
+                                    value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                    unitName: nutrient["unitName"]
+                                }
+                            }
+
+                            else {
+                                macros[name] = {
+                                    nutrientName: name,
+                                    value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                    unitName: nutrient["unitName"]
+                                }
+                            }
+
+                        }
+                        
+                        else {
+
+                            // energy needs special handling 
+                            if (name.includes("Energy")) {
+                                if (energyFound) return
+                                if (nutrient["unitName"] === "kJ") {
+                                    value = Number((nutrient["value"] * 0.239006 * multiplier).toFixed(2))
+                                }
+                                else value =  Number((nutrient["value"]*multiplier).toFixed(2))
+                                name = "Energy"
+                                energyFound = true;
+                                amount = macros[name]["value"] + value;
+                                macros[name] = {
+                                    ...macros[name],
+                                    value: amount,
+                                }
+                            }
+                            
+                            // carbs may be named differently
+                            else if (name.includes("Carbohydrate")) {
+                                amount = macros[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                                name = "Carbohydrates"
+                                macros[name] = {
+                                    ...macros[name],
+                                    value: amount,
+                                }
+                            }
+
+                            else {
+                                amount = macros[name]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                                macros[name] = {
+                                    ...macros[name],
+                                    value: amount,
+                                }
+                            }
                         }
                     }
+
+                    // sum micros
+                    else if (nutrient.nutrientNumber < 605) {
+                        if (micros[nutrient["nutrientName"]]===undefined) {
+                            micros[nutrient["nutrientName"]] = {
+                                nutrientName: nutrient["nutrientName"],
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+                        else {
+                            amount = micros[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                            micros[nutrient["nutrientName"]] = {
+                                ...micros[nutrient["nutrientName"]],
+                                value: amount,
+                            }
+                        }
+                    } 
+
+                    // sum other
                     else {
-                        amount = overallNutrients[nutrient["name"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
-                        overallNutrients[nutrient["nutrientName"]] = {
-                            ...overallNutrients[nutrient["name"]],
-                            amount: amount,
+                        if (other[nutrient["nutrientName"]]===undefined) {
+                            other[nutrient["nutrientName"]] = {
+                                nutrientName: nutrient["nutrientName"],
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+                        else {
+                            amount = other[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                            other[nutrient["nutrientName"]] = {
+                                ...other[nutrient["nutrientName"]],
+                                value: amount,
+                            }
                         }
                     }
                 })
             }
         })
+        
+    
+        // convert to arrays so tables can parse data
+        const macrosData = Object.values(macros)
+        const microsData = Object.values(micros)
+        const otherData = Object.values(other)
 
-        // convert to arrays since our tables parse arrays
-        const overallNutrientsArray = Object.values(overallNutrients)
+        // sort the arrays
+        sortNutrients(macrosData, microsData)
 
-        // return updated data to replace old data in meal
+        // return a modified meal with the new data to store in the meal list
+        console.log(macrosData)
         const newData = {
-            nutrients: overallNutrientsArray,
+            macros: macrosData,
+            micros: microsData,
+            other: otherData
         }
-
         return newData;
+    }
+
+    function sortNutrients(macros: any, micros: any) {
+
+        // sort by id of macronutrient
+        macros.sort((a: any, b: any) => {
+
+            // have major macros go first
+            if (a.nutrientName.includes("Energy")) {
+                if (b.nutrientName.includes("Energy")) {
+                    if (b.unitName==="KCAL") return(1)
+                }
+                return(-1)
+            }
+            else if (b.nutrientName.includes("Energy")) return(1)
+            
+            else if (a.nutrientName==="Total lipid (fat)") return(-1)
+            else if (b.nutrientName==="Total lipid (fat)") return(1)
+
+            else if (a.nutrientName.includes("Carbohydrate")) return(-1)
+            else if (b.nutrientName.includes("Carbohydrate")) return(1)
+
+            else if (a.nutrientName==="Protein") return(-1)
+            else if (b.nutrientName==="Protein") return(1)
+
+            else if (a.nutrientName.includes("Fatty")) return(-1)
+            else if (b.nutrientName.includes("Fatty")) return(1)
+
+            else if (a.nutrientNumber<b.nutrientNumber) return(-1)
+            return(1)
+        });
+
+        // sort by id of micronutrient
+        micros.sort((a: any, b: any) => {
+             // have vitamins go first
+            if (a.nutrientName.includes("Vitamin")) {
+                if (b.nutrientName.includes("Vitamin")) {
+                    if (a.nutrientName>b.nutrientName) return(1)
+                }
+                return(-1)
+            }
+            else if (b.nutrientName.includes("Vitamin")) return(1)
+
+            else if (a.nutrientNumber<b.nutrientNumber) return(-1)
+            return(1)
+        });
     }
 
     // store updated mealList to persistant memory

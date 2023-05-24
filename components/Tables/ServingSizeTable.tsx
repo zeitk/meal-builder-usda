@@ -4,7 +4,6 @@ import { StyleSheet, Text, View, TextInput } from "react-native";
 export default function ServingSizeTable(props: any) {
 
     function newServingSize(servingSize: any) {
-
         if (servingSize==="") servingSize=props.baseServing;
         const multiplier = servingSize/props.baseServing;
         props.newMultiplier(multiplier)

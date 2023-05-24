@@ -117,21 +117,57 @@ export default function MealBuilder({ navigation, route }: any) {
         let multiplier: number;
         let amount: number;
 
+        // used for energy to handle duplicate entries and mismatching units
+        let value: number;
+        let name: string;
+        let unit: string;
+        let energyFound: boolean;
+
         foods.forEach((foodItem: any, i: number) => {
 
             multiplier = foodItem["multiplier"]
             if (i == 0) {
                 // use the first foods data as a template
+                energyFound = false;
                 foodItem["nutrition"].forEach((nutrient: any) => {
 
                     // sort nutrients in their respective buckets
                     if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) {
-                        if (nutrient["unitName"] === "kJ") return
-                        macros[nutrient["nutrientName"]] = {
-                            nutrientName: nutrient["nutrientName"],
-                            value: Number((nutrient["value"]*multiplier).toFixed(2)),
-                            unitName: nutrient["unitName"]
+                        
+                        // energy needs special handling 
+                        if (nutrient.nutrientName.includes("Energy")) {
+                            if (energyFound) return
+                            if (nutrient["unitName"] === "kJ") {
+                                value = Number((nutrient["value"] * 0.239006 * multiplier).toFixed(2))
+                            }
+                            else value =  Number((nutrient["value"]*multiplier).toFixed(2))
+                            unit = "kcal"
+                            name = "Energy"
+                            energyFound = true;
+                            macros[name] = {
+                                nutrientName: name,
+                                value: value,
+                                unitName: unit
+                            }
                         }
+                        
+                        else if (nutrient.nutrientName.includes("Carbohydrate")) {
+                            name = "Carbohydrates"
+                            macros[name] = {
+                                nutrientName: name,
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+
+                        else {
+                            macros[nutrient["nutrientName"]] = {
+                                nutrientName: nutrient["nutrientName"],
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+
                     }
                     else if (nutrient.nutrientNumber < 605) {
                         micros[nutrient["nutrientName"]] = {
@@ -147,7 +183,7 @@ export default function MealBuilder({ navigation, route }: any) {
                             unitName: nutrient["unitName"]
                         }
                     }
-                })
+            })
                 
 
             }
@@ -156,29 +192,90 @@ export default function MealBuilder({ navigation, route }: any) {
             else {
 
                 currentFoodNutrients = foodItem["nutrition"];
-
+                energyFound = false;
                 // sum up nutrients
                 currentFoodNutrients.map((nutrient: any) => {
 
                     // sum macros
                     if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) {
-                        if (macros[nutrient["nutrientName"]]===undefined) {
-                            if (nutrient["unitName"] === "kJ") return
-                            macros[nutrient["nutrientName"]] = {
-                                nutrientName: nutrient["nutrientName"],
-                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
-                                unitName: nutrient["unitName"]
+
+                        name = nutrient["nutrientName"]
+                        if (name.includes("Energy")) name = "Energy"
+
+                        if (macros[name]===undefined) {
+
+                            // energy needs special handling 
+                            if (name.includes("Energy")) {
+                                if (energyFound) return
+                                if (nutrient["unitName"] === "kJ") {
+                                    value = Number((nutrient["value"] * 0.239006 * multiplier).toFixed(2))
+                                }
+                                else value =  Number((nutrient["value"]*multiplier).toFixed(2))
+                                unit = "kcal"
+                                energyFound = true;
+                                macros[name] = {
+                                    nutrientName: name,
+                                    value: value,
+                                    unitName: unit
+                                }
                             }
-                        }
-                        else {
-                            if (nutrient["unitName"] === "kJ") return
-                            amount = macros[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
-                            macros[nutrient["nutrientName"]] = {
-                                ...macros[nutrient["nutrientName"]],
-                                value: amount,
+                            
+                            // carbs may be named differently
+                            else if (name.includes("Carbohydrate")) {
+                                name = "Carbohydrates"
+                                macros[name] = {
+                                    nutrientName: name,
+                                    value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                    unitName: nutrient["unitName"]
+                                }
                             }
+
+                            else {
+                                macros[name] = {
+                                    nutrientName: name,
+                                    value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                    unitName: nutrient["unitName"]
+                                }
+                            }
+
                         }
                         
+                        else {
+
+                            // energy needs special handling 
+                            if (name.includes("Energy")) {
+                                if (energyFound) return
+                                if (nutrient["unitName"] === "kJ") {
+                                    value = Number((nutrient["value"] * 0.239006 * multiplier).toFixed(2))
+                                }
+                                else value =  Number((nutrient["value"]*multiplier).toFixed(2))
+                                name = "Energy"
+                                energyFound = true;
+                                amount = macros[name]["value"] + value;
+                                macros[name] = {
+                                    ...macros[name],
+                                    value: amount,
+                                }
+                            }
+                            
+                            // carbs may be named differently
+                            else if (name.includes("Carbohydrate")) {
+                                amount = macros[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                                name = "Carbohydrates"
+                                macros[name] = {
+                                    ...macros[name],
+                                    value: amount,
+                                }
+                            }
+
+                            else {
+                                amount = macros[name]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                                macros[name] = {
+                                    ...macros[name],
+                                    value: amount,
+                                }
+                            }
+                        }
                     }
 
                     // sum micros

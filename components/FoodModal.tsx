@@ -15,7 +15,7 @@ export default function FoodModal(props: any) {
 
     // states
     const [page, setPage] = useState<number>(1);
-    const [maxPage, setMaxPage] = useState<number>(3);
+    const [maxPage, setMaxPage] = useState<number>(3)
     const [quicklist, setQuicklist] = useContext(QuicklistContext);
     const [multiplier, setMultiplier] = useState<number>(1);
     const [isInQuicklist, setIsInQuicklist] = useState<Boolean>(false);
@@ -82,7 +82,7 @@ export default function FoodModal(props: any) {
                 return(-1)
             }
             else if (b.nutrientName.includes("Energy")) return(1)
-            
+
             else if (a.nutrientName==="Total lipid (fat)") return(-1)
             else if (b.nutrientName==="Total lipid (fat)") return(1)
 
