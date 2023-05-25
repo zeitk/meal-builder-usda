@@ -1,9 +1,10 @@
+import 'react-native-gesture-handler';
 import React from 'react'
 
 import { useEffect, useState } from "react";
 import {  View, TextInput, StyleSheet, Keyboard } from "react-native";
 import { Button } from "react-native-paper";
-import { Feather, Entypo } from "@expo/vector-icons";
+import { Feather, Entypo, AntDesign } from "@expo/vector-icons";
 
 const slogans: string[] = [
     "Watcha feeling?",
@@ -16,7 +17,7 @@ interface ISearchBarProps {
     placeholderTextColor: string
 }
 
-export function SearchBar(props: ISearchBarProps) {
+export function SearchBar({ navigation }: any,props: ISearchBarProps) {
 
     const [searchString, setSearchString] = useState("");
     const [pressed, setPressed] = useState(false);
@@ -56,6 +57,7 @@ export function SearchBar(props: ISearchBarProps) {
                 onEndEditing={beginSearch}
                 onFocus={() => { setPressed(true) }} >
             </TextInput>
+
             {pressed && (
                 <Entypo
                     name="cross" size={20} color="black" style={styles.entypo}
@@ -64,8 +66,15 @@ export function SearchBar(props: ISearchBarProps) {
             )}
         </View>
         {/* show cancel button if searchbar is pressed */}
+        { !pressed && (
+            <View style={styles.toggle}>
+                <AntDesign 
+                    name="menu-unfold" size={24} color="black"  
+                    onPress={() => navigation.navigate('Settings')}/>
+            </View>
+        )}
         {pressed && (
-            <View>
+            <View style={styles.toggle}>
                 <Button children="Cancel" textColor="#c5050c" onPress={() => {
                     setSearchString("")
                     Keyboard.dismiss();
@@ -95,6 +104,9 @@ const styles = StyleSheet.create({
     feather: {
         marginLeft: 1
     },
+    toggle: {
+        padding: 10
+    },
     entypo: {
         padding: 1,
         marginLeft: -25
@@ -111,7 +123,7 @@ const styles = StyleSheet.create({
         padding: 10,
         flexDirection: 'row',
         borderRadius: 15,
-        width: '95%',
+        width: '92.5%',
         backgroundColor: '#dadfe1',
         alignItems: 'center',
     }

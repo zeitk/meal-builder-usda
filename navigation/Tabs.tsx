@@ -13,6 +13,7 @@ import MealStack from './MealStack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { IMeal } from '../interfaces/Interfaces';
 import HomeStack from './HomeStack';
+import SearchDrawer from './SearchDrawer';
 
 const TabNavigator = createBottomTabNavigator();
 
@@ -67,12 +68,7 @@ export default function Tabs() {
         <QuicklistContext.Provider value={[quicklist,setQuicklist]}>
 
         <TabNavigator.Navigator>
-            <TabNavigator.Screen name="HomeStack" component={HomeStack} options={{title: "Home", headerShown: true, tabBarIcon() {
-                return<>
-                    <Feather name="home" size={20} color="black"></Feather>
-                    </>
-                },}}></TabNavigator.Screen>
-            <TabNavigator.Screen name="Search" component={Search}  options={{headerShown: true, tabBarIcon() {
+            <TabNavigator.Screen name="SearchDrawer" component={SearchDrawer}  options={{headerShown: true, title:'Search', tabBarIcon() {
                 return<> 
                     <Feather name="search" size={20} color="black"> </Feather>
                 </>
@@ -87,7 +83,7 @@ export default function Tabs() {
                     <MaterialCommunityIcons name="silverware" size={20} color="black"></MaterialCommunityIcons>
                 </>
                 },}}></TabNavigator.Screen>
-        </TabNavigator.Navigator>
+        </TabNavigator.Navigator> 
 
         </QuicklistContext.Provider>
         </MealListContext.Provider>

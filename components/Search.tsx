@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import React from 'react'
 
 import { useEffect, useState, useRef } from "react";
@@ -15,6 +16,7 @@ const examples: string[] = [
     "Bread",
     "Egg"
 ]
+
 
 export default function Search({ navigation } : any) {
 
@@ -70,7 +72,6 @@ export default function Search({ navigation } : any) {
             api_key: 'DNItjU0i2C3igYQ0on5Gg28ES7YKTcKhY6ldRNtM'
         };
 
-        //let url = "https://api.spoonacular.com/food/ingredients/search?";
         let url = "https://api.nal.usda.gov/fdc/v1/foods/search?";
         url += (new URLSearchParams(params)).toString()
 
@@ -116,7 +117,7 @@ export default function Search({ navigation } : any) {
 
     return <>
         <SafeAreaView style={styles.safeView}>
-            <SearchBar callback={beginSearch} placeholderTextColor={"#646569"}></SearchBar>
+            <SearchBar callback={beginSearch} placeholderTextColor={"#646569"} navigation={navigation}></SearchBar>
             { (totalItems<1) &&
                 <View style={styles.messageTextView}>
                     { (totalItems===0) ?

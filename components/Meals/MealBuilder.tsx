@@ -122,6 +122,7 @@ export default function MealBuilder({ navigation, route }: any) {
         let name: string;
         let unit: string;
         let energyFound: boolean;
+        let carbsFound: boolean;
 
         foods.forEach((foodItem: any, i: number) => {
 
@@ -129,6 +130,7 @@ export default function MealBuilder({ navigation, route }: any) {
             if (i == 0) {
                 // use the first foods data as a template
                 energyFound = false;
+                carbsFound = false;
                 foodItem["nutrition"].forEach((nutrient: any) => {
 
                     // sort nutrients in their respective buckets
@@ -152,7 +154,9 @@ export default function MealBuilder({ navigation, route }: any) {
                         }
                         
                         else if (nutrient.nutrientName.includes("Carbohydrate")) {
+                            if (carbsFound) return
                             name = "Carbohydrates"
+                            carbsFound = true;
                             macros[name] = {
                                 nutrientName: name,
                                 value: Number((nutrient["value"]*multiplier).toFixed(2)),
@@ -193,6 +197,8 @@ export default function MealBuilder({ navigation, route }: any) {
 
                 currentFoodNutrients = foodItem["nutrition"];
                 energyFound = false;
+                carbsFound = false;
+
                 // sum up nutrients
                 currentFoodNutrients.map((nutrient: any) => {
 
@@ -201,6 +207,7 @@ export default function MealBuilder({ navigation, route }: any) {
 
                         name = nutrient["nutrientName"]
                         if (name.includes("Energy")) name = "Energy"
+                        if (name.includes("Carbohydrate")) name = "Carbohydrates"
 
                         if (macros[name]===undefined) {
 
@@ -222,7 +229,9 @@ export default function MealBuilder({ navigation, route }: any) {
                             
                             // carbs may be named differently
                             else if (name.includes("Carbohydrate")) {
+                                if (carbsFound) return;
                                 name = "Carbohydrates"
+                                carbsFound = true;
                                 macros[name] = {
                                     nutrientName: name,
                                     value: Number((nutrient["value"]*multiplier).toFixed(2)),
@@ -260,8 +269,8 @@ export default function MealBuilder({ navigation, route }: any) {
                             
                             // carbs may be named differently
                             else if (name.includes("Carbohydrate")) {
-                                amount = macros[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
                                 name = "Carbohydrates"
+                                amount = macros[name]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
                                 macros[name] = {
                                     ...macros[name],
                                     value: amount,
