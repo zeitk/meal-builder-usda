@@ -1,7 +1,6 @@
-import 'react-native-gesture-handler';
 import React from 'react'
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import {  View, StyleSheet, SafeAreaView, ScrollView, Text } from "react-native";
 import { Portal } from "react-native-paper";
 import { IFood } from '../interfaces/Interfaces';
@@ -9,6 +8,7 @@ import { IFood } from '../interfaces/Interfaces';
 import FoodCard from "./FoodCard";
 import FoodModal from "./FoodModal";
 import { SearchBar } from './SearchBar';
+import { CriteriaContext, useCriteria } from '../context/CriteriaContext';
 
 const examples: string[] = [
     "Potato",
@@ -17,13 +17,13 @@ const examples: string[] = [
     "Egg"
 ]
 
-
 export default function Search({ navigation } : any) {
 
     // search related states
     const [items, setItems] = useState<any>([]);
     const [totalItems, setTotalItems] = useState<number>(-1);
     const scrollRef = useRef<ScrollView | null>(null);
+    const { searchCriteria } = useCriteria();
 
     // modal and table related states
     const [exampleBanner, setExampleBanner] = useState<String>("")
@@ -62,13 +62,16 @@ export default function Search({ navigation } : any) {
 
     const searchItems = ((input: any) => {
 
+        const dataTypeString: string = (searchCriteria?.dataType === "" ? 'Foundation,SR Legacy': searchCriteria!.dataType)
+        const pageSizeString: string = (searchCriteria?.pageSize === "" ? '10': searchCriteria!.pageSize)
+
         const params = {
             query: input,
             addChildre: 'true',
-            dataType: 'Foundation,SR Legacy',
+            dataType: dataTypeString,
             sortBy: 'dataType.keyword',
             sortDirection: 'asc',
-            pageSize: '10',
+            pageSize: pageSizeString,
             api_key: 'DNItjU0i2C3igYQ0on5Gg28ES7YKTcKhY6ldRNtM'
         };
 
@@ -117,7 +120,7 @@ export default function Search({ navigation } : any) {
 
     return <>
         <SafeAreaView style={styles.safeView}>
-            <SearchBar callback={beginSearch} placeholderTextColor={"#646569"} navigation={navigation}></SearchBar>
+            <SearchBar callback={beginSearch} placeholderTextColor={"#646569"} navigation={navigation} mode={"search"}></SearchBar>
             { (totalItems<1) &&
                 <View style={styles.messageTextView}>
                     { (totalItems===0) ?

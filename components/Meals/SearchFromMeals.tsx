@@ -9,6 +9,7 @@ import FoodModal from "../FoodModal";
 import CurrentMealContext from '../../context/CurrentMeal';
 import { SearchBar } from '../SearchBar';
 import { IFood } from '../../interfaces/Interfaces';
+import { useCriteria } from '../../context/CriteriaContext';
 
 const examples: string[] = [
     "Potato",
@@ -23,6 +24,7 @@ export default function SearchFromMeals(props: any) {
     const [items, setItems] = useState<any>([]);
     const [totalItems, setTotalItems] = useState<number>(-1);
     const scrollRef = useRef<ScrollView | null>(null)
+    const { searchCriteria } = useCriteria();
 
     // modal and table related states
     const [exampleBanner, setExampleBanner] = useState<String>("")
@@ -37,6 +39,7 @@ export default function SearchFromMeals(props: any) {
 
     useEffect(() => {
         //reset total items
+        console.log(props)
         setTotalItems(-1)
 
         // have example search 
@@ -87,17 +90,20 @@ export default function SearchFromMeals(props: any) {
 
     // search for foods and update state
     const searchItems = ((input: any) => {
+
+        const dataTypeString: string = (searchCriteria?.dataType === "" ? 'Foundation,SR Legacy': searchCriteria!.dataType)
+        const pageSizeString: string = (searchCriteria?.pageSize === "" ? '10': searchCriteria!.pageSize)
+
         const params = {
             query: input,
             addChildre: 'true',
-            dataType: 'Foundation,SR Legacy',
+            dataType: dataTypeString,
             sortBy: 'dataType.keyword',
             sortDirection: 'asc',
-            pageSize: '10',
+            pageSize: pageSizeString,
             api_key: 'DNItjU0i2C3igYQ0on5Gg28ES7YKTcKhY6ldRNtM'
         };
 
-        //let url = "https://api.spoonacular.com/food/ingredients/search?";
         let url = "https://api.nal.usda.gov/fdc/v1/foods/search?";
         url += (new URLSearchParams(params)).toString()
 
@@ -151,7 +157,6 @@ export default function SearchFromMeals(props: any) {
         })
         if (!found) setCurrentIsInMeal(false);
     }
-
     function toggleModal() {
         if (!modalVisible) {
             setModalVisible(true)
@@ -165,7 +170,7 @@ export default function SearchFromMeals(props: any) {
 
     return <>
         <SafeAreaView style={styles.safeView}>
-            <SearchBar callback={beginSearch} placeholderTextColor={"#646569"}></SearchBar>
+            <SearchBar callback={beginSearch} placeholderTextColor={"#646569"} mode={"Meals"} navigation={props.navigation}></SearchBar>
             { (totalItems<1) &&
                 <View style={styles.messageTextView}>
                     { (totalItems===0) ?

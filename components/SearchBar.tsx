@@ -1,4 +1,3 @@
-import 'react-native-gesture-handler';
 import React from 'react'
 
 import { useEffect, useState } from "react";
@@ -14,10 +13,12 @@ const slogans: string[] = [
 
 interface ISearchBarProps {
     callback: (input: string) => void,
-    placeholderTextColor: string
+    placeholderTextColor: string,
+    navigation?: any, 
+    mode?: string
 }
 
-export function SearchBar({ navigation }: any,props: ISearchBarProps) {
+export function SearchBar(props: ISearchBarProps) {
 
     const [searchString, setSearchString] = useState("");
     const [pressed, setPressed] = useState(false);
@@ -70,7 +71,7 @@ export function SearchBar({ navigation }: any,props: ISearchBarProps) {
             <View style={styles.toggle}>
                 <AntDesign 
                     name="menu-unfold" size={24} color="black"  
-                    onPress={() => navigation.navigate('Settings')}/>
+                    onPress={() => props.navigation.navigate('Settings')}/>
             </View>
         )}
         {pressed && (

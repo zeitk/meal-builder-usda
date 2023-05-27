@@ -17,7 +17,9 @@ export default function FoodCard(props: any) {
     function nameSub() {
         if (props.name === undefined) return
         let index = props.name.search(",")
-        let sub = props.name.slice(index + 2)
+        let sub;
+        if (props.name.at(index + 1) === ' ') sub = props.name.slice(index + 2)
+        else sub = props.name.slice(index + 1)
         if (sub === "" || sub === undefined) return;
         sub = sub[0].toUpperCase() + sub.slice(1)
         return sub;

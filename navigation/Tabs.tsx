@@ -2,8 +2,6 @@ import React from 'react'
 
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Quicklist from '../components/Quicklist';
-import Home from '../components/Home';
-import Search from "../components/Search";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { useState, useEffect } from 'react';
@@ -11,9 +9,9 @@ import QuicklistContext from '../context/QuicklistContext';
 import { MealListContext } from '../context/MealList';
 import MealStack from './MealStack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { IMeal } from '../interfaces/Interfaces';
-import HomeStack from './HomeStack';
+import { IMeal, ISearchCriteria } from '../interfaces/Interfaces';
 import SearchDrawer from './SearchDrawer';
+import { CriteriaContext } from '../context/CriteriaContext';
 
 const TabNavigator = createBottomTabNavigator();
 
@@ -21,11 +19,13 @@ export default function Tabs() {
     
     const [quicklist, setQuicklist] = useState<any[]>([])
     const [mealList, setMealList] = useState<IMeal[]>([])
+    const [searchCriteria, setSearchCriteria] = useState<ISearchCriteria>({dataType: "", pageSize: ""})
 
     useEffect(() => {
-        clearMemory();
+        //clearMemory();
         getQuicklist();
         getMealList(); 
+        getSearchCriteria();
     }, [])
 
     // utility function in case memory needs to be wiped
@@ -63,12 +63,31 @@ export default function Tabs() {
         }
     }
 
+    async function getSearchCriteria() {
+        try {
+            const priorCriteria = await AsyncStorage.getItem("@search") 
+            if (priorCriteria !== null)  {
+                setSearchCriteria(JSON.parse(priorCriteria))
+            }
+            else {
+                setSearchCriteria({
+                    dataType: 'Foundation,SR Legacy',
+                    pageSize: '25'
+                })
+            }
+        }
+        catch(e) {
+            console.error("Error 2", "Error retrieving meals in Tabs.tsx") 
+        }
+    }
+
     return<>
         <MealListContext.Provider value={{mealList,setMealList}}>
         <QuicklistContext.Provider value={[quicklist,setQuicklist]}>
+        <CriteriaContext.Provider value={{searchCriteria,setSearchCriteria}}>
 
         <TabNavigator.Navigator>
-            <TabNavigator.Screen name="SearchDrawer" component={SearchDrawer}  options={{headerShown: true, title:'Search', tabBarIcon() {
+            <TabNavigator.Screen name="SearchDrawer" component={SearchDrawer} initialParams={{name:"Tabs"}} options={{headerShown: true, title:'Search', tabBarIcon() {
                 return<> 
                     <Feather name="search" size={20} color="black"> </Feather>
                 </>
@@ -85,6 +104,7 @@ export default function Tabs() {
                 },}}></TabNavigator.Screen>
         </TabNavigator.Navigator> 
 
+        </CriteriaContext.Provider>
         </QuicklistContext.Provider>
         </MealListContext.Provider>
     </>

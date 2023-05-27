@@ -1,26 +1,54 @@
 import * as React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { Checkbox } from 'react-native-paper';
+import { useCriteria } from '../context/CriteriaContext';
 
 export default function SearchCheckbox(props: any) {
-  const [checked, setChecked] = React.useState(false);
 
-  return (
-    <View style={styles.overallView}>
-        <View style={styles.checkboxBorder}>
-        <Checkbox.IOS
-            color='black' theme={{dark: true}} 
-            status={checked ? 'checked' : 'unchecked'}
-            onPress={() => {
-            setChecked(!checked);
-            }}
-        />
-        </View>
-        <Text style={styles.checkboxText}>{props.text}</Text>
-    </View>
+    const [checked, setChecked] = React.useState(true);
+    const { searchCriteria } = useCriteria();
 
+    React.useEffect(() => {
+        initialCheck();
+    }, [props])
 
-  );
+    function initialCheck() {
+        let text: string; 
+        (props.text === "Unbranded" ? text = "Foundation,SR Legacy" : text = "Branded") 
+
+        if (searchCriteria.dataType.includes(text)) setChecked(true);
+        else setChecked(false);
+    }
+
+    function update() {
+        if (checked && !validCheck()) return 
+        props.update(props.text, checked)
+        setChecked(!checked)
+    }
+
+    function validCheck() {
+        if (props.text === "Branded") {
+            if (!searchCriteria.dataType.includes("Foundation,SR Legacy")) return false;
+        }
+        if (props.text === "Unbranded") {
+            if (!searchCriteria.dataType.includes("Branded")) return false;
+        }
+        return true
+    }
+
+    return (
+        <>
+            <Pressable style={styles.overallView} onPress={() => { update() }}>
+                <View style={styles.checkboxBorder}>
+                <Checkbox.IOS
+                    color='black' theme={{dark: true}} 
+                    status={checked ? 'checked' : 'unchecked'}
+                    onPress={() => { update() }}/>
+                </View>
+                <Text style={styles.checkboxText}>{props.text}</Text>
+            </Pressable>
+        </>
+    );
 };
 
 const styles = StyleSheet.create({
@@ -33,9 +61,10 @@ const styles = StyleSheet.create({
     },
     overallView: {
         width: '100%',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         alignItems: 'center',
-        flexDirection: 'row'
+        flexDirection: 'row',
+        marginVertical: 7.5
     },
     checkboxBorder: {
         borderColor: 'black',

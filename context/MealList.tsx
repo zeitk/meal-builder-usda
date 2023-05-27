@@ -12,7 +12,7 @@ export const useMealList = () => {
   
     if (!currentMealListContext) {
       throw new Error(
-        "useCurrentUser has to be used within <CurrentUserContext.Provider>"
+        "useCurrentMeal has to be used within <CurrentMealContext.Provider>"
       );
     }
   

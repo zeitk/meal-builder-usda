@@ -8,8 +8,8 @@ import CurrentMealContext from '../../context/CurrentMeal';
 import { useMealList }  from '../../context/MealList';
 import QuicklistContext from '../../context/QuicklistContext';
 import FoodCard from '../FoodCard';
-import { IMeal, INutrient } from '../../interfaces/Interfaces'
-import SearchFromMeals from './SearchFromMeals';
+import { IMeal } from '../../interfaces/Interfaces'
+import SearchDrawer from '../../navigation/SearchDrawer';
 
 export default function MealBuilder({ navigation, route }: any) {
 
@@ -534,7 +534,7 @@ export default function MealBuilder({ navigation, route }: any) {
                 // page 2 is entirely composed of the Search feature
                 <View style={inEditMode ? viewStyles.editScroll:viewStyles.inputScroll}>
                     <View style={viewStyles.overall}>
-                        <SearchFromMeals toggleButtons={toggleButtons}></SearchFromMeals>
+                            <SearchDrawer toggleButtons={toggleButtons} name="Meals"></SearchDrawer>
                     </View>
                 </View>
                 }
