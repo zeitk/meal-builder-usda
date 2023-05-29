@@ -11,6 +11,9 @@ export default function Quicklist({ navigation }: any) {
     const [viewedFoodId, setViewedFoodId] = useState<number>()
     const [viewedFoodName, setViewedFoodName] = useState<String>()
     const [viewedFoodNutrition, setViewedFoodNutrition] = useState<any>({});
+    const [viewedFoodUnit, setViewedFoodUnit] =  useState<string>("");
+    const [viewedFoodServings, setViewedFoodServings] = useState<number>(1)
+    const [viewedFoodBrand, setViewedFoodBrand] = useState<string>("")
     const [foodModalVisible, setFoodModalVisible] = useState<Boolean>(false);
 
     useEffect(() => {
@@ -24,6 +27,9 @@ export default function Quicklist({ navigation }: any) {
                 setViewedFoodId(food["id"])
                 setViewedFoodName(food["name"])
                 setViewedFoodNutrition(food["nutrition"])
+                setViewedFoodServings(food["servingSize"])
+                setViewedFoodUnit(food["unit"])
+                setViewedFoodBrand(food["brand"])
                 setFoodModalVisible(true)
             }
         })
@@ -41,7 +47,7 @@ export default function Quicklist({ navigation }: any) {
                 <ScrollView style={styles.scrollview}>
                 {
                     quicklist.map((food: any, i: number) => {
-                        return <FoodCard key={i} id={food.id} name={food.name} nutrients={food.nutrition} callback={moreInfo} mode={0}></FoodCard>
+                        return <FoodCard key={i} id={food.id} name={food.name} nutrients={food.nutrition} brand={food.brand} callback={moreInfo} mode={0}></FoodCard>
                     })
                 }
                 </ScrollView>
@@ -54,8 +60,8 @@ export default function Quicklist({ navigation }: any) {
             
             <Portal.Host>
                     <FoodModal 
-                        nutrition={viewedFoodNutrition} name={viewedFoodName}  id={viewedFoodId} 
-                        toggle={toggleFoodModal} 
+                        nutrition={viewedFoodNutrition} name={viewedFoodName}  id={viewedFoodId} brand={viewedFoodBrand}
+                        servingSize={viewedFoodServings} unit={viewedFoodUnit} toggle={toggleFoodModal} 
                         context={"Quicklist"} modalVisible={foodModalVisible} ></FoodModal>
             </Portal.Host>
         </SafeAreaView>
@@ -73,7 +79,8 @@ const styles = StyleSheet.create({
     emptyQuicklist: {
         height: '100%',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        backgroundColor: 'white'
     },
     buttonView: {
         paddingTop: 15,

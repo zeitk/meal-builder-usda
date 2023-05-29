@@ -10,6 +10,7 @@ import CurrentMealContext from '../../context/CurrentMeal';
 import { SearchBar } from '../SearchBar';
 import { IFood } from '../../interfaces/Interfaces';
 import { useCriteria } from '../../context/CriteriaContext';
+import ButtonsContext from '../../context/ButtonsContext';
 
 const examples: string[] = [
     "Potato",
@@ -33,13 +34,15 @@ export default function SearchFromMeals(props: any) {
     const [currentId, setCurrentId] = useState<string>("");
     const [currentName, setCurrentName] = useState<string>("");
     const [currentIsInMeal, setCurrentIsInMeal] = useState<boolean>(false);
+    const [currentUnit, setCurrentUnit] =  useState<string>("");
+    const [currentServing, setCurrentServing] =  useState<number>(1);
+    const { hideButtons, setHideButtons } = useContext(ButtonsContext);
 
     // meal related context
     const { currentMeal, setCurrentMeal} = useContext(CurrentMealContext)
 
     useEffect(() => {
         //reset total items
-        console.log(props)
         setTotalItems(-1)
 
         // have example search 
@@ -139,9 +142,21 @@ export default function SearchFromMeals(props: any) {
         isCurrentInMeal(id.toString())
         setNutrition(nutrients)
         setCurrentId(id.toString())
+        for (const item of items) {
+            if (item["fdcId"] === id) {
+                if (item["dataType"] === "Branded") {
+                    setCurrentServing(item["servingSize"].toFixed(1))
+                    setCurrentUnit(item["servingSizeUnit"])
+                }
+                else {
+                    setCurrentServing(100)
+                    setCurrentUnit("g")
+                }
+            }
+        };
         setCurrentName(name);
-        setModalVisible(true);
-        props.toggleButtons()
+        setModalVisible(true); 
+        setHideButtons(!hideButtons); 
     }
 
     function isCurrentInMeal(id: String) {
@@ -157,15 +172,15 @@ export default function SearchFromMeals(props: any) {
         })
         if (!found) setCurrentIsInMeal(false);
     }
+
     function toggleModal() {
         if (!modalVisible) {
             setModalVisible(true)
-            props.toggleButtons()
         }
         else {
             setModalVisible(false)
-            props.toggleButtons()
         }
+        setHideButtons(!hideButtons);
     }
 
     return <>
@@ -196,17 +211,24 @@ export default function SearchFromMeals(props: any) {
                                     <View style={styles.exampleBanner}>
                                         <Text style={styles.foodCateogoryText}>{item["foodCategory"]}</Text>
                                     </View>
-                                    <FoodCard id={item.fdcId} name={item.description} nutrients={item.foodNutrients} callback={moreInfo} mode={0}></FoodCard>
+                                    <FoodCard id={item.fdcId} name={item.description} nutrients={item.foodNutrients} 
+                                        brand={(item.dataType === "Branded") ? item.brandName : "Unbranded"} callback={moreInfo} mode={0}>
+                                    </FoodCard>
                                 </View>
                             )
                         }
-                        else return <FoodCard key={i} id={item.fdcId} name={item.description} nutrients={item.foodNutrients} callback={moreInfo} mode={0}></FoodCard>
+                        else return (
+                            <FoodCard key={i} id={item.fdcId} name={item.description} nutrients={item.foodNutrients} 
+                                brand={(item.dataType === "Branded") ? item.brandName : "Unbranded"} callback={moreInfo} mode={0}>
+                            </FoodCard>
+                        )
                     })
                 }
             </ScrollView>
 
             <Portal.Host>
-                <FoodModal nutrition={nutrition} name={currentName} id={currentId} editMealFoods={editMealFoods} toggle={toggleModal} modalVisible={modalVisible} isInMeal={currentIsInMeal} context={"MealBuilder"}></FoodModal>
+                <FoodModal nutrition={nutrition} name={currentName} id={currentId} servingSize={currentServing} unit={currentUnit}
+                    editMealFoods={editMealFoods} toggle={toggleModal} modalVisible={modalVisible} isInMeal={currentIsInMeal} context={"MealBuilder"}></FoodModal>
             </Portal.Host>
 
         </SafeAreaView>

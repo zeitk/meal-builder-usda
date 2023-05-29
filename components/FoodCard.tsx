@@ -4,35 +4,11 @@ import { StyleSheet, Text, View, Pressable, TextInput } from "react-native";
 import { Card } from "react-native-paper";
 import { Entypo } from '@expo/vector-icons'; 
 import FoodCardBase from './FoodCardBase';
+import FoodCardHead from './FoodCardHead';
 
 export default function FoodCard(props: any) {
 
     const [isPressed, setIsPressed] = useState<Boolean>(false)
-
-    function nameMain() {
-        if (props.name === undefined) return
-        return (props.name.split(","))[0]
-    }
-
-    function nameSub() {
-        if (props.name === undefined) return
-        let index = props.name.search(",")
-        let sub;
-        if (props.name.at(index + 1) === ' ') sub = props.name.slice(index + 2)
-        else sub = props.name.slice(index + 1)
-        if (sub === "" || sub === undefined) return;
-        sub = sub[0].toUpperCase() + sub.slice(1)
-        return sub;
-    }
-
-    function nameSubLength() {
-        if (props.name === undefined) return
-        let index = props.name.search(",")
-        let sub = props.name.slice(index + 2)
-        if (sub === "" || sub === undefined) return false
-        if (sub.length > 40) return true
-        return false
-    }
 
     function showMoreInfo(quantity: any) {
 
@@ -78,8 +54,8 @@ export default function FoodCard(props: any) {
                         {/* Viewing from Search or Quicklist */}
                         { (props.mode===0) &&
                             <View style={styles.searchTitleView}>
-                                <Text numberOfLines={1} style={styles.titleText}>{nameMain()}</Text>
-                                <Text numberOfLines={2} style={styles.subText}>{nameSub()}</Text>
+                                <FoodCardHead name={props.name} brand={props.brand}>
+                                </FoodCardHead>
                                 <FoodCardBase nutrition={props.nutrients}></FoodCardBase>
                             </View>
                         }
@@ -87,8 +63,7 @@ export default function FoodCard(props: any) {
                         { (props.mode===1) &&
                             <View style={styles.infoTextView}>
                                 <View style={styles.mealTitleView}>
-                                    <Text numberOfLines={1} style={styles.titleText}>{nameMain()}</Text>
-                                    <Text numberOfLines={2} style={styles.subText}>{nameSub()}</Text>
+                                    <FoodCardHead name={props.name} brand={props.brand}></FoodCardHead>
                                     <FoodCardBase name={props.name} nutrition={props.nutrients}></FoodCardBase>
                                 </View>
                                 { (isPressed) 
@@ -103,7 +78,7 @@ export default function FoodCard(props: any) {
                                         keyboardType={"numeric"} 
                                         returnKeyType="done" 
                                         onSubmitEditing={(value) => showMoreInfo(value.nativeEvent.text) } 
-                                        placeholder={"100g"}>
+                                        placeholder={props.servingSize+props.unit}>
                                     </TextInput>
                                     
                                 </View>
@@ -116,8 +91,7 @@ export default function FoodCard(props: any) {
                         { (props.mode===2) &&
                             <View style={mealStyles.mealInfoOverall}>
                                 <View style={mealStyles.mealInfoTextView}>
-                                    <Text numberOfLines={1} style={mealStyles.mealInfoTitleText}>{nameMain()}</Text>
-                                    <Text numberOfLines={2} style={mealStyles.mealInfoSubtitleText}>{nameSub()}</Text>
+                                    <FoodCardHead name={props.name} brand={props.brand}></FoodCardHead>
                                     <Text numberOfLines={1} style={mealStyles.quantityText}>Quantity: {(Number(props.quantity)).toFixed(0)}g</Text>
                                     <FoodCardBase nutrition={props.nutrients} quantity={(Number(props.quantity))}></FoodCardBase>
                                 </View>

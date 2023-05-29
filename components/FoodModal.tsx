@@ -10,6 +10,8 @@ import MealServingInput from './Meals/MealServingInput';
 import NutritionTable from "./Tables/NutritionTable";
 import ServingSizeTable from "./Tables/ServingSizeTable";
 import HeadersContext from '../context/DataHeaders';
+import FoodCardHead from './FoodCardHead';
+import Pie from './Tables/PieChart';
 
 export default function FoodModal(props: any) {
 
@@ -29,10 +31,10 @@ export default function FoodModal(props: any) {
     useEffect(() => {
         isFoodInQuicklist(props.id);
         setPage(1);
-        (props.context==="MealInfo") ? setMultiplier(props.servings["multiplier"]):setMultiplier(1);
+        (props.context==="MealInfo") ? setMultiplier(props.multiplier):setMultiplier(1);
         sortNutrients()
         getHeaders();
-    }, [props])
+    }, [props.nutrition])
 
     // callback to hide modal
     function toggleModal() {
@@ -40,7 +42,7 @@ export default function FoodModal(props: any) {
     }
 
     function nextPage() {
-        if (page < 3) setPage(page + 1)
+        if (page < maxPage) setPage(page + 1)
     }
 
     function prevPage() {
@@ -57,7 +59,7 @@ export default function FoodModal(props: any) {
 
     function sortNutrients() {
 
-        let nutrients = props.nutrition
+        const nutrients = props.nutrition
 
         // check for undefined or empty object
         if (nutrients===undefined || Object.keys(nutrients).length === 0) return
@@ -118,26 +120,10 @@ export default function FoodModal(props: any) {
         if (trace.length > 0) max++;
         if (other.length > 0) max++;
 
-        setMaxPage(max);
+        setMaxPage(max + 1);
         setMacros(core);
         setMicros(trace)
         setOther(other);
-    }
-
-    function nameMain() {
-        let name = props.name;
-        if (name === undefined) return
-        return (name.split(","))[0]
-    }
-
-    function nameSub() {
-        let name = props.name;
-        if (name === undefined) return;
-        let index = name.search(",")
-        let sub = name.slice(index + 2)
-        if (sub === "") return;
-        sub = sub[0].toUpperCase() + sub.slice(1)
-        return sub;
     }
     
     function isFoodInQuicklist(foodId: number) {
@@ -168,6 +154,9 @@ export default function FoodModal(props: any) {
 
         // deep copy current food to prevent pointer issues
         let foodObject = JSON.parse(JSON.stringify(props))
+        foodObject["servingSize"] = props.servingSize;
+        foodObject["unit"] = props.unit;
+        foodObject["brand"] = props.brand;
 
         // don't store the same item twice
         quicklist.forEach((foodItem: any) => {
@@ -184,7 +173,7 @@ export default function FoodModal(props: any) {
         saveQuicklist(updatedQuicklist)
         setIsInQuicklist(true);
 
-        Alert.alert("Added", capitalize(props.name)+" has been added to your Quicklist")
+        Alert.alert("Added", displayString()+" has been added to your Quicklist")
     }
 
     function removeFromQuicklist() {
@@ -194,24 +183,30 @@ export default function FoodModal(props: any) {
 
         // in Search the buttons should switch, in Quicklist the modal should close
         if (props.context==="Search") {
-            Alert.alert("Removed", capitalize(props.name)+" has been removed from your Quicklist")
+            Alert.alert("Removed", displayString()+" has been removed from your Quicklist")
             setIsInQuicklist(false)
         }
         if (props.context==="Quicklist") toggleModal()
     }
 
     function removeFromMeal() {   
-        Alert.alert("Removed", capitalize(props.name)+" has been removed from the current meal")
+        Alert.alert("Removed", displayString()+" has been removed from the current meal")
         props.editMealFoods(-1)
     }
 
     function addToMeal() {
         props.editMealFoods(multiplier, props);
-        Alert.alert("Added", capitalize(props.name)+" has been added to the current meal")
+        Alert.alert("Added", displayString()+" has been added to the current meal")
+    }
+
+    function displayString() {
+        let display: string;
+        (props.brand === "Unbranded") ? display = props.name : display = props.brand + " " + props.name
+        return capitalize(display);
     }
 
     function capitalize(input: string) {
-        let editedString = input;
+        let editedString = input.toLowerCase();
         const stringLength = input.length;
         editedString=editedString.slice(0,1).toUpperCase()+editedString.slice(1,stringLength);
 
@@ -240,17 +235,17 @@ export default function FoodModal(props: any) {
                 <View style={styles.containerView}>
                     <View style={styles.upperView}>
                         <View style={styles.headerView}>
-                            <Text numberOfLines={1} style={styles.header}>{nameMain()}</Text>
-                            <Text numberOfLines={1} style={styles.headerSub}>{nameSub()}</Text>
+                            <FoodCardHead name={props.name} brand={props.brand}></FoodCardHead>
                         </View>
                         <View style={styles.servingSizeView}>
                             { (props.context==="Home") ?
-                                <MealServingInput headers={headers} newServingQuantity={newMultiplier} multiplier={100} context="Home"></MealServingInput>
+                                <MealServingInput headers={headers} newServingQuantity={newMultiplier} unit={props.unit} multiplier={props.servings} context="Home"></MealServingInput>
                                 :
-                                <ServingSizeTable headers={headers} baseServing={100} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
+                                <ServingSizeTable headers={headers} baseServing={props.servingSize} unit={props.unit} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
                             }
                         </View>
                     </View>
+
                     {
                         (page === 1) &&
                         (
@@ -259,8 +254,17 @@ export default function FoodModal(props: any) {
                             </View>
                         ) 
                     }
+                                        { 
+                        (page === 2) &&
+                        (
+                            <View style={styles.pieChartView}>
+                                <Pie nutrition={macros} multiplier={multiplier}></Pie>
+                            </View>
+
+                        )
+                    }
                     {
-                        (page == 2 && micros.length > 0) &&
+                        (page === 3 && micros.length > 0) &&
                         (
                             <View style={styles.nutritionView}>
                                 <NutritionTable headers={headers} nutrition={micros} multiplier={multiplier}></NutritionTable>
@@ -268,7 +272,7 @@ export default function FoodModal(props: any) {
                         )
                     }
                     {
-                        (page == 3 && other.length > 0) &&
+                        (page === 4 && other.length > 0) &&
                         (
                             <View style={styles.nutritionView}>
                                 <NutritionTable headers={headers} nutrition={other} multiplier={multiplier}></NutritionTable>
@@ -361,6 +365,12 @@ const styles = StyleSheet.create({
         height: '65%',
         width: '100%',
         overflow: 'hidden'
+    },
+    pieChartView: {
+        height: '65%',
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     caloricBreakdownView: {
         height: '20%',

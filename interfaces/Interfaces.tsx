@@ -39,3 +39,8 @@ export interface ICriteriaContext {
     searchCriteria: ISearchCriteria,
     setSearchCriteria: (Criteria: ISearchCriteria) => void
 }
+
+export interface IButtonContext {
+    hideButtons: boolean,
+    setHideButtons: (hide: boolean) => void
+}

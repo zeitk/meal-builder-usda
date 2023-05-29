@@ -10,6 +10,7 @@ import NutritionTable from "../Tables/NutritionTable";
 import FoodModal from "../FoodModal";
 import { IMeal } from "../../interfaces/Interfaces";
 import MealServingInput from "./MealServingInput";
+import Pie from "../Tables/PieChart";
 
 
 export default function MealInfo({ navigation, route }: any) {
@@ -26,8 +27,11 @@ export default function MealInfo({ navigation, route }: any) {
     const [viewedFoodId, setViewedFoodId] = useState<number>()
     const [viewedFoodName, setViewedFoodName] = useState<string>()
     const [viewedFoodNutrition, setViewedFoodNutrition] = useState<any>({});
-    const [foodModalVisible, setFoodModalVisible] = useState<boolean>(false);
+    const [viewedFoodUnit, setViewedFoodUnit] =  useState<string>("");
+    const [viewedFoodBrand, setViewedFoodBrand] = useState<string>("")
     const [viewedFoodServings, setViewedFoodServings] = useState<any>({})
+    const [viewedFoodMultiplier, setViewedFoodMultiplier] = useState<number>(1)
+    const [foodModalVisible, setFoodModalVisible] = useState<boolean>(false);
 
     if (!mealList) {
         throw new Error(
@@ -78,7 +82,7 @@ export default function MealInfo({ navigation, route }: any) {
     }
 
     function getMaxPage() {
-        let max = 2;
+        let max = 3;
         if (micros.length > 0) max++;
         if (other.length > 0) max++
         setMaxPage(max);
@@ -130,10 +134,10 @@ export default function MealInfo({ navigation, route }: any) {
             if (food["id"]===foodId) {
                 setViewedFoodId(food["id"])
                 setViewedFoodName(food["name"])
-                setViewedFoodServings({
-                    quantity: food["quantity"],
-                    multiplier: food["multiplier"]
-                })
+                setViewedFoodMultiplier(food["multiplier"])
+                setViewedFoodServings(food["quantity"])
+                setViewedFoodBrand(food["brand"])
+                setViewedFoodUnit(food["unit"])
                 setViewedFoodNutrition(food["nutrition"])
                 setFoodModalVisible(true)
             }
@@ -424,7 +428,6 @@ export default function MealInfo({ navigation, route }: any) {
         sortNutrients(macrosData, microsData)
 
         // return a modified meal with the new data to store in the meal list
-        console.log(macrosData)
         const newData = {
             macros: macrosData,
             micros: microsData,
@@ -530,7 +533,7 @@ export default function MealInfo({ navigation, route }: any) {
                     <ScrollView style={viewStyles.scroll}>
                     {
                         foods.map((food: any, i: number) => {
-                            return <FoodCard key={i} id={food["id"]} nutrients={food.nutrition} callback={moreFoodInfo} name={food["name"]} quantity={food["quantity"]} mode={2}></FoodCard>
+                            return <FoodCard key={i} id={food["id"]} brand={food.brand} nutrients={food.nutrition} callback={moreFoodInfo} name={food["name"]} quantity={food["quantity"]} mode={2}></FoodCard>
                         })
                     }
                     </ScrollView>
@@ -549,7 +552,15 @@ export default function MealInfo({ navigation, route }: any) {
                 )
             }
             {
-                (page == 3) &&
+                (page === 3) && 
+                (
+                    <View style={viewStyles.pieChart}>
+                        <Pie nutrition={macros} multiplier={multiplier}></Pie>
+                    </View>
+                )
+            }
+            {
+                (page === 4) &&
                 (
                     <View style={viewStyles.middle}>
                         <MealServingInput multiplier={multiplier} newServingQuantity={newServingQuantity}></MealServingInput>
@@ -560,7 +571,7 @@ export default function MealInfo({ navigation, route }: any) {
                 )
             }
             {
-                (page == 4) &&
+                (page === 5) &&
                 (
                     <View style={viewStyles.middle}>
                         <MealServingInput multiplier={multiplier} newServingQuantity={newServingQuantity}></MealServingInput>
@@ -581,8 +592,8 @@ export default function MealInfo({ navigation, route }: any) {
 
             <Portal.Host>
                 <FoodModal 
-                    nutrition={viewedFoodNutrition} name={viewedFoodName} id={viewedFoodId} servings={viewedFoodServings} 
-                    toggle={toggleFoodModal} editMealFoods={editMealFoods} context={"MealInfo"} modalVisible={foodModalVisible}
+                    nutrition={viewedFoodNutrition} name={viewedFoodName} id={viewedFoodId} multiplier={viewedFoodMultiplier} servingSize={viewedFoodServings} unit={viewedFoodUnit}
+                    brand={viewedFoodBrand} toggle={toggleFoodModal} editMealFoods={editMealFoods} context={"MealInfo"} modalVisible={foodModalVisible}
                 ></FoodModal>
             </Portal.Host>
 
@@ -604,6 +615,11 @@ const viewStyles = StyleSheet.create({
     },
     middle: {
         height: '75%',
+    },
+    pieChart: {
+        height: '75%',
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     lower: {
         height: '12%',

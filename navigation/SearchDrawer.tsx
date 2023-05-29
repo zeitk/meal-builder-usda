@@ -10,17 +10,16 @@ const SearchStack = createNativeStackNavigator();
 export default function SearchDrawer(props: any) {
 
     useEffect(() => {
-      console.log(props)
     },[])
 
     return (
       <SearchStack.Navigator>
         <SearchStack.Group>
           { (props.name === "Meals") &&
-            <SearchStack.Screen name="Search" component={SearchFromMeals} options={{headerShown: false}} ></SearchStack.Screen>
+            <SearchStack.Screen name="Search" component={SearchFromMeals} options={{headerShown: false}} initialParams={{toggleButtons: props.toggleButtons}} ></SearchStack.Screen>
           }
           { (props.route !== undefined && props.route.params.name === "Tabs") &&
-            <SearchStack.Screen name="Search" component={Search} options={{headerShown: false}}></SearchStack.Screen>
+            <SearchStack.Screen name="Search" component={Search} options={{headerShown: false}}></SearchStack.Screen> 
           }
         </SearchStack.Group>
         <SearchStack.Group screenOptions={{  presentation: 'modal',headerShown: false,  }}>

@@ -12,7 +12,7 @@ import { CriteriaContext, useCriteria } from '../context/CriteriaContext';
 
 const examples: string[] = [
     "Potato",
-    "Bean",
+    "Corn",
     "Bread",
     "Egg"
 ]
@@ -31,6 +31,9 @@ export default function Search({ navigation } : any) {
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [currentId, setCurrentId] = useState<string>("");
     const [currentName, setCurrentName] = useState<string>("");
+    const [currentUnit, setCurrentUnit] =  useState<string>("");
+    const [currentServing, setCurrentServing] =  useState<number>(1);
+    const [currentBrand, setCurrentBrand] = useState<string>("")
 
     useEffect(() => {
         
@@ -109,6 +112,20 @@ export default function Search({ navigation } : any) {
     function moreInfo(id: number, name: string, nutrition: any) {
         setNutrition(nutrition)
         setCurrentId(id.toString())
+        for (const item of items) {
+            if (item["fdcId"] === id) {
+                if (item["dataType"] === "Branded") {
+                    setCurrentServing(item["servingSize"].toFixed(1))
+                    setCurrentUnit(item["servingSizeUnit"])
+                    setCurrentBrand(item["brandName"])
+                }
+                else {
+                    setCurrentServing(100)
+                    setCurrentUnit("g")
+                    setCurrentBrand("Unbranded")
+                }
+            }
+        };
         setCurrentName(name);
         setModalVisible(true);
     }
@@ -144,17 +161,24 @@ export default function Search({ navigation } : any) {
                                     <View style={styles.exampleBanner}>
                                         <Text style={styles.foodCateogoryText}>{item["foodCategory"]}</Text>
                                     </View>
-                                    <FoodCard id={item.fdcId} name={item.description} nutrients={item.foodNutrients} callback={moreInfo} mode={0}></FoodCard>
+                                    <FoodCard id={item.fdcId} name={item.description} nutrients={item.foodNutrients} 
+                                        brand={(item.dataType === "Branded") ? item.brandName : "Unbranded"} callback={moreInfo} mode={0}></FoodCard>
                                 </View>
                             )
                         }
-                        else return <FoodCard key={i} id={item.fdcId} name={item.description} nutrients={item.foodNutrients} callback={moreInfo} mode={0}></FoodCard>
+                        else return( 
+                            <FoodCard key={i} id={item.fdcId} name={item.description} nutrients={item.foodNutrients} 
+                                brand={(item.dataType === "Branded") ? item.brandName : "Unbranded"} callback={moreInfo} mode={0}>
+                            </FoodCard>
+                            )
                     })
                 }
             </ScrollView>
 
             <Portal.Host>
-                <FoodModal nutrition={nutrition} name={currentName} id={currentId} toggle={toggleModal} modalVisible={modalVisible} context={"Search"}></FoodModal>
+                <FoodModal nutrition={nutrition} name={currentName} id={currentId} toggle={toggleModal} modalVisible={modalVisible} 
+                servingSize={currentServing} brand={currentBrand} unit={currentUnit} context={"Search"}>
+                </FoodModal>
             </Portal.Host>
 
         </SafeAreaView>

@@ -8,8 +8,9 @@ import CurrentMealContext from '../../context/CurrentMeal';
 import { useMealList }  from '../../context/MealList';
 import QuicklistContext from '../../context/QuicklistContext';
 import FoodCard from '../FoodCard';
-import { IMeal } from '../../interfaces/Interfaces'
+import { IButtonContext, IMeal } from '../../interfaces/Interfaces'
 import SearchDrawer from '../../navigation/SearchDrawer';
+import ButtonsContext from '../../context/ButtonsContext';
 
 export default function MealBuilder({ navigation, route }: any) {
 
@@ -20,6 +21,7 @@ export default function MealBuilder({ navigation, route }: any) {
     const [page, setPage] = useState<number>(1);
     const [hideButtons, setHideButtons] = useState<boolean>(false);
     const [inEditMode, setInEditMode] = useState<boolean>(false);
+    const HideButtonsContext: IButtonContext = { hideButtons, setHideButtons,};
     
     useEffect(() =>{
         setPage(1);
@@ -64,7 +66,8 @@ export default function MealBuilder({ navigation, route }: any) {
         
         // deep copy to prevent editing other meals
         const selectedFood = JSON.parse(JSON.stringify(quicklist[index]))
-        const baseQuantity = 100
+        const baseQuantity = selectedFood["servingSize"]
+        const unit = selectedFood["unit"]
 
         // removing a food
         if (mode === 1) {
@@ -78,6 +81,7 @@ export default function MealBuilder({ navigation, route }: any) {
         else if (mode === 2 && quantity === -1) {
             selectedFood["multiplier"]=1
             selectedFood["quantity"]=baseQuantity
+            selectedFood["unit"] = unit
             setCurrentMeal({
                 ...currentMeal,
                 foods: [
@@ -479,12 +483,13 @@ export default function MealBuilder({ navigation, route }: any) {
     }
 
     function toggleButtons() {
-        if (hideButtons) setHideButtons(false);
-        else setHideButtons(true)
+        (hideButtons) ? setHideButtons(false) : setHideButtons(true)
     }
 
     return (
         <CurrentMealContext.Provider  value={{currentMeal, setCurrentMeal}}>
+        <ButtonsContext.Provider value={{hideButtons,setHideButtons}}>
+
         <View style={viewStyles.modal}>
             <View style={viewStyles.overall}>
                 { (page===1) 
@@ -512,7 +517,11 @@ export default function MealBuilder({ navigation, route }: any) {
                             </View> 
                             {
                                 quicklist.map((food: any, i: number) => {
-                                    return <FoodCard key={i} arrayIndex={i} id={food.id} name={food.name} nutrients={food.nutrition} callback={editMeal} mode={1}></FoodCard>
+                                    return (
+                                        <FoodCard key={i} arrayIndex={i} id={food.id} name={food.name} brand={food.brand}
+                                            nutrients={food.nutrition} servingSize={food.servingSize} unit={food.unit} callback={editMeal} mode={1}>
+                                        </FoodCard>
+                                    )
                                 })
                             }
                         </ScrollView>
@@ -534,7 +543,7 @@ export default function MealBuilder({ navigation, route }: any) {
                 // page 2 is entirely composed of the Search feature
                 <View style={inEditMode ? viewStyles.editScroll:viewStyles.inputScroll}>
                     <View style={viewStyles.overall}>
-                            <SearchDrawer toggleButtons={toggleButtons} name="Meals"></SearchDrawer>
+                            <SearchDrawer name="Meals"></SearchDrawer>
                     </View>
                 </View>
                 }
@@ -562,6 +571,8 @@ export default function MealBuilder({ navigation, route }: any) {
                 }
             </View>
         </View>     
+
+        </ButtonsContext.Provider>
         </CurrentMealContext.Provider>
     )
 }

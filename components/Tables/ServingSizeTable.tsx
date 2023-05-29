@@ -26,7 +26,7 @@ export default function ServingSizeTable(props: any) {
                             }}
                             onSubmitEditing={(value) => newServingSize(value.nativeEvent.text) } 
                             placeholder={(props.baseServing*props.multiplier).toString()}></TextInput>
-                <Text style={{paddingLeft: 3}}>{" g"}</Text>
+                <Text style={{paddingLeft: 3}}>{" "+props.unit}</Text>
                 <Text style={styles.helpText}>454g = 1lb</Text>
             </View>
     )
