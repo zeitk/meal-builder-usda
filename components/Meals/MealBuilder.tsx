@@ -8,7 +8,7 @@ import CurrentMealContext from '../../context/CurrentMeal';
 import { useMealList }  from '../../context/MealList';
 import QuicklistContext from '../../context/QuicklistContext';
 import FoodCard from '../FoodCard';
-import { IButtonContext, IMeal } from '../../interfaces/Interfaces'
+import { IMeal } from '../../interfaces/Interfaces'
 import SearchDrawer from '../../navigation/SearchDrawer';
 import ButtonsContext from '../../context/ButtonsContext';
 
@@ -93,9 +93,7 @@ export default function MealBuilder({ navigation, route }: any) {
                 if (selectedFood["name"]===foodItem["name"]) {
                     // set new quantity and multiplier 
                     const multiplier = quantity/baseQuantity
-
                     foodItem["multiplier"]=multiplier;
-                    foodItem["quantity"]=quantity
                     return foodItem
                     } else {
                     // Other foods haven't changed

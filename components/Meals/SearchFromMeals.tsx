@@ -61,8 +61,8 @@ export default function SearchFromMeals(props: any) {
         let selectedFood = JSON.parse(JSON.stringify(food))
 
         if (multiplier > 0) {
-            selectedFood["quantity"] =  selectedFood["brand"] === "Unbranded" ? 100 * multiplier : selectedFood["servingSize"] * multiplier
-            selectedFood["multiplier"] = 1;
+            selectedFood["quantity"] =  selectedFood["servingSize"] 
+            selectedFood["multiplier"] = multiplier;
             setCurrentMeal({
                 ...currentMeal,
                 foods: [

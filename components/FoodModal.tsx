@@ -34,7 +34,7 @@ export default function FoodModal(props: any) {
         (props.context==="MealInfo") ? setMultiplier(props.multiplier):setMultiplier(1);
         sortNutrients()
         getHeaders();
-    }, [props.nutrition])
+    }, [props.nutrition, props.multiplier])
 
     // callback to hide modal
     function toggleModal() {

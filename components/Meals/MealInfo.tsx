@@ -160,14 +160,9 @@ export default function MealInfo({ navigation, route }: any) {
                 if (newMultiplier>=0) {
                     updatedFoods = meal["foods"].map((food: any) => {
                         if (food["id"] === viewedFoodId) {
-                            const newQuantity = viewedFoodBrand === "Unbranded" ? 
-                                (100*newMultiplier).toFixed(2) 
-                                :
-                                (viewedFoodServings*newMultiplier).toFixed(2)
                             return({
                                 ...food,
-                                quantity: newQuantity,
-                                multiplier: 1
+                                multiplier: newMultiplier
                             })
                         }
                         else return food 
@@ -535,7 +530,12 @@ export default function MealInfo({ navigation, route }: any) {
                     <ScrollView style={viewStyles.scroll}>
                     {
                         foods.map((food: any, i: number) => {
-                            return <FoodCard key={i} id={food["id"]} brand={food.brand} nutrients={food.nutrition} callback={moreFoodInfo} name={food["name"]} quantity={food["quantity"]} mode={2}></FoodCard>
+                            return (
+                                <FoodCard 
+                                    key={i} id={food["id"]} brand={food.brand} nutrients={food.nutrition} callback={moreFoodInfo} 
+                                    name={food["name"]} quantity={food["quantity"]} unit={food["unit"]} multiplier={food["multiplier"]} mode={2}>
+                                </FoodCard>
+                            )
                         })
                     }
                     </ScrollView>

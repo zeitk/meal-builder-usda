@@ -92,8 +92,8 @@ export default function FoodCard(props: any) {
                             <View style={mealStyles.mealInfoOverall}>
                                 <View style={mealStyles.mealInfoTextView}>
                                     <FoodCardHead name={props.name} brand={props.brand}></FoodCardHead>
-                                    <Text numberOfLines={1} style={mealStyles.quantityText}>Quantity: {(Number(props.quantity)).toFixed(0)}g</Text>
-                                    <FoodCardBase nutrition={props.nutrients} quantity={(Number(props.quantity))}></FoodCardBase>
+                                    <Text numberOfLines={1} style={mealStyles.quantityText}>Quantity: {(Number(props.quantity) * props.multiplier).toFixed(0)}{props.unit}</Text>
+                                    <FoodCardBase nutrition={props.nutrients} quantity={(Number(props.quantity))} multiplier={props.multiplier}></FoodCardBase>
                                 </View>
                                 <View style={mealStyles.mealInfoIcon}>
                                     <Entypo name="edit" size={22} color="black" />

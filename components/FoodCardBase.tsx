@@ -4,7 +4,8 @@ import { StyleSheet, Text, View } from "react-native";
 
 export default function FoodCardBase(props: any) {
 
-    const quantity = props.quantity===undefined ? 1 : Number(props.quantity)/100
+    const quantity = props.quantity===undefined ? 1 : 1 //Number(props.quantity)/100
+    const multiplier = props.multiplier===undefined ? 1 : Number(props.multiplier)
 
     function getCalories() {
         if (props.nutrition === undefined) return("")
@@ -12,9 +13,9 @@ export default function FoodCardBase(props: any) {
             // calories
             if (nutrient.nutrientName.includes("Energy")) {
                 if (nutrient.unitName.toUpperCase() === "KJ") {
-                    return((nutrient.value * 0.239006 * quantity).toFixed(1));
+                    return((nutrient.value * 0.239006 * quantity * multiplier).toFixed(1));
                 }
-                else return(((nutrient.value)*quantity).toFixed(1))
+                else return(((nutrient.value) * quantity * multiplier).toFixed(1))
             }
             
         }
@@ -25,7 +26,7 @@ export default function FoodCardBase(props: any) {
         if (props.nutrition === undefined) return("")
         for (const nutrient of props.nutrition) {
             if (nutrient.nutrientName.includes("Total lipid")) {
-                return(((nutrient.value)*quantity).toFixed(1)+"g") 
+                return(((nutrient.value) * quantity * multiplier).toFixed(1)+"g") 
             }
         }
         return("")
@@ -35,7 +36,7 @@ export default function FoodCardBase(props: any) {
         if (props.nutrition === undefined) return("")
         for (const nutrient of props.nutrition) {
             if (nutrient.nutrientName.includes("Carbohydrate")) {
-                return(((nutrient.value)*quantity).toFixed(1)+"g")
+                return(((nutrient.value) * quantity * multiplier).toFixed(1)+"g")
             }
         }
         return("")
@@ -45,7 +46,7 @@ export default function FoodCardBase(props: any) {
         if (props.nutrition === undefined) return("")
         for (const nutrient of props.nutrition) {
             if (nutrient.nutrientName.includes("Protein")) {
-                return(((nutrient.value)*quantity).toFixed(1)+"g")
+                return(((nutrient.value) * quantity * multiplier).toFixed(1)+"g")
             }
         }
         return("")
