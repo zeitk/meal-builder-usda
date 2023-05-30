@@ -13,19 +13,18 @@ export default function SearchCheckbox(props: any) {
     }, [props])
 
     function initialCheck() {
-        let text: string; 
-        (props.text === "Unbranded" ? text = "Foundation,SR Legacy" : text = "Branded") 
-
-        if (searchCriteria.dataType.includes(text)) setChecked(true);
-        else setChecked(false);
+        const text: string = (props.text === "Unbranded") ? "Foundation,SR Legacy" : "Branded"
+        searchCriteria.dataType.includes(text) ? setChecked(true) : setChecked(false)
     }
 
     function update() {
         if (checked && !validCheck()) return 
+        // update the search criteria 
         props.update(props.text, checked)
         setChecked(!checked)
     }
 
+    // make sure at least one checkbox is checked
     function validCheck() {
         if (props.text === "Branded") {
             if (!searchCriteria.dataType.includes("Foundation,SR Legacy")) return false;
@@ -38,15 +37,15 @@ export default function SearchCheckbox(props: any) {
 
     return (
         <>
-            <Pressable style={styles.overallView} onPress={() => { update() }}>
-                <View style={styles.checkboxBorder}>
-                <Checkbox.IOS
-                    color='black' theme={{dark: true}} 
-                    status={checked ? 'checked' : 'unchecked'}
-                    onPress={() => { update() }}/>
-                </View>
-                <Text style={styles.checkboxText}>{props.text}</Text>
-            </Pressable>
+        <Pressable style={styles.overallView} onPress={() => { update() }}>
+            <View style={styles.checkboxBorder}>
+            <Checkbox.IOS
+                color='black' theme={{dark: true}} 
+                status={checked ? 'checked' : 'unchecked'}
+                onPress={() => { update() }}/>
+            </View>
+            <Text style={styles.checkboxText}>{props.text}</Text>
+        </Pressable>
         </>
     );
 };

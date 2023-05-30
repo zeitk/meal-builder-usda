@@ -1,12 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useContext } from 'react'
+
 import { useEffect, useState } from "react";
 import { Alert, SafeAreaView } from 'react-native';
 import { StyleSheet, Text, View } from "react-native";
 import { Button, Modal, Portal } from "react-native-paper";
 import QuicklistContext from '../context/QuicklistContext';
 import { IFood } from '../interfaces/Interfaces';
-import MealServingInput from './Meals/MealServingInput';
 import NutritionTable from "./Tables/NutritionTable";
 import ServingSizeTable from "./Tables/ServingSizeTable";
 import HeadersContext from '../context/DataHeaders';
@@ -190,8 +190,8 @@ export default function FoodModal(props: any) {
     }
 
     function removeFromMeal() {   
+        props.removeFromMeal(props)
         Alert.alert("Removed", displayString()+" has been removed from the current meal")
-        props.editMealFoods(-1)
     }
 
     function addToMeal() {
@@ -238,11 +238,9 @@ export default function FoodModal(props: any) {
                             <FoodCardHead name={props.name} brand={props.brand}></FoodCardHead>
                         </View>
                         <View style={styles.servingSizeView}>
-                            { (props.context==="Home") ?
-                                <MealServingInput headers={headers} newServingQuantity={newMultiplier} unit={props.unit} multiplier={props.servings} context="Home"></MealServingInput>
-                                :
-                                <ServingSizeTable headers={headers} baseServing={props.servingSize} unit={props.unit} newMultiplier={newMultiplier} multiplier={multiplier}></ServingSizeTable>
-                            }
+                            <ServingSizeTable headers={headers} baseServing={props.servingSize} unit={props.unit} 
+                                newMultiplier={newMultiplier} multiplier={multiplier}>
+                            </ServingSizeTable>
                         </View>
                     </View>
 
@@ -280,20 +278,15 @@ export default function FoodModal(props: any) {
                         )
                     }
 
-                    { (props.context !== "Home") 
-                        ?
-                        <View style={styles.pageButtonsView}>
-                            <Button textColor="#2774AE" children="Prev" onPress={prevPage} disabled={page===1} labelStyle={styles.pageButtonText}></Button>
-                            <View style={styles.pageText}>
-                                <Text style={styles.text}>{page} of {maxPage}</Text>
-                            </View>
-                            <Button textColor="#2774AE" children="Next" onPress={nextPage} disabled={page===maxPage} labelStyle={styles.pageButtonText}></Button>
+                    <View style={styles.pageButtonsView}>
+                        <Button textColor="#2774AE" children="Prev" onPress={prevPage} disabled={page===1} labelStyle={styles.pageButtonText}></Button>
+                        <View style={styles.pageText}>
+                            <Text style={styles.text}>{page} of {maxPage}</Text>
                         </View>
-                        :
-                        null
-                    }
+                        <Button textColor="#2774AE" children="Next" onPress={nextPage} disabled={page===maxPage} labelStyle={styles.pageButtonText}></Button>
+                    </View>
 
-                    <View style={(props.context==="Home" ? styles.buttonsInHomeView:styles.bottomButtonsView)}>
+                    <View style={styles.bottomButtonsView}>
                         <View style={styles.multipurposeButton}>
                         { (props.context==="Search" && isInQuicklist) &&
                             <Button textColor="#c5050c" children="Remove from Quicklist" onPress={removeFromQuicklist} labelStyle={styles.buttonText}></Button>
@@ -312,10 +305,7 @@ export default function FoodModal(props: any) {
                         } 
                         { (props.context==="MealBuilder" && props.isInMeal) &&
                             <Button textColor="#c5050c" children="Remove from Meal" onPress={removeFromMeal} labelStyle={styles.buttonText}></Button>
-                        }      
-                        { (props.context==="Home") &&
-                            <Button textColor="#2774AE" children="See more in Meals" onPress={props.goToMeals} labelStyle={styles.buttonText}></Button>
-                        }            
+                        }               
                         </View>
                         <View style={styles.closeButton}>
                             <Button textColor='#c5050c'  children="Close" onPress={toggleModal} labelStyle={styles.buttonText}></Button>
@@ -408,15 +398,6 @@ const styles = StyleSheet.create({
     },
     multipurposeButton: {
         width: '60%'
-    },
-    buttonsInHomeView: {
-        flexDirection: 'row',
-        height: '20%',
-        width: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderTopWidth: 1,
-        borderColor: '#dadfe1',
     },
 
     // text styles

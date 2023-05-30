@@ -1,14 +1,13 @@
 import React from 'react'
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useState, useRef } from "react";
 import {  View, StyleSheet, SafeAreaView, ScrollView, Text } from "react-native";
 import { Portal } from "react-native-paper";
-import { IFood } from '../interfaces/Interfaces';
 
 import FoodCard from "./FoodCard";
 import FoodModal from "./FoodModal";
 import { SearchBar } from './SearchBar';
-import { CriteriaContext, useCriteria } from '../context/CriteriaContext';
+import { useCriteria } from '../context/CriteriaContext';
 
 const examples: string[] = [
     "Potato",

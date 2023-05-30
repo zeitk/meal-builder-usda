@@ -1,9 +1,8 @@
 import React from 'react'
 
 import { PieChart } from "react-native-chart-kit";
-import { Dimensions, View } from "react-native";
+import { Dimensions, Text } from "react-native";
 import { useEffect, useState } from "react";
-import { Text } from 'react-native';
 
 const screenWidth = Dimensions.get("window").width;
 

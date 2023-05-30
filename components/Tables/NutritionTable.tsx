@@ -1,4 +1,5 @@
 import React from 'react'
+
 import { DataTable } from "react-native-paper";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useEffect, useState, useContext } from "react";
@@ -98,6 +99,7 @@ export default function NutritionTable(props: any) {
                             )
                         })
                     }
+                    <DataTable.Row>{}</DataTable.Row>
                     </ScrollView>
                 </DataTable>
             </View>

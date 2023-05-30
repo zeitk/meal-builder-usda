@@ -1,94 +1,77 @@
 import React, { useRef } from 'react'
 
-import { useEffect } from "react";
 import {  View, SafeAreaView, Text, StyleSheet, TextInput } from "react-native";
 import SearchCheckbox from './SearchCheckbox';
 import { useCriteria } from '../context/CriteriaContext';
 import { Button } from 'react-native-paper';
+import { ISearchCriteria } from '../interfaces/Interfaces';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SearchSettings({ navigation }: any) {
 
     const { searchCriteria, setSearchCriteria } = useCriteria();
     const ref = useRef<any>(null)
 
-    useEffect(() => {
-        const unsubscribe = navigation.addListener('transitionEnd', (e: any) => {
-            // Do something
-            if (e.data.closing) {
-            }
-        });
-      
-        return unsubscribe;
-    }, [navigation]);
-
     function updateCriteria(text: string, checked: boolean) {
 
-        if (text === "Unbranded") { 
+        let newDataType: string = ""
 
+        if (text === "Unbranded") { 
             if (checked) {
-                searchCriteria.dataType.includes("Branded") ? 
-                    setSearchCriteria({
-                        ...searchCriteria,
-                        dataType: "Branded"
-                    })
-                    : 
-                    setSearchCriteria({
-                        ...searchCriteria,
-                        dataType: ""
-                    })
+                if (searchCriteria.dataType.includes("Branded"))  newDataType = "Branded"
             }
 
             else {
                 searchCriteria.dataType.includes("Branded") ? 
-                    setSearchCriteria({
-                        ...searchCriteria,
-                        dataType: "Foundation,SR Legacy,Branded" 
-                    })
+                    newDataType = "Foundation,SR Legacy,Branded" 
                     : 
-                    setSearchCriteria({
-                        ...searchCriteria,
-                        dataType: "Foundation,SR Legacy" 
-                    })
+                    newDataType = "Foundation,SR Legacy" 
             }
         }
-        else if (text === "Branded") {
 
+        else if (text === "Branded") {
             if (checked) {
-                searchCriteria?.dataType.includes("Foundation,SR Legacy") ? 
-                setSearchCriteria({
-                    ...searchCriteria,
-                    dataType: "Foundation,SR Legacy" 
-                })
-                : 
-                setSearchCriteria({
-                    ...searchCriteria,
-                    dataType: "" 
-                })
+                if (searchCriteria?.dataType.includes("Foundation,SR Legacy")) newDataType = "Foundation,SR Legacy" 
             }
             else {
                 searchCriteria?.dataType.includes("Foundation,SR Legacy") ? 
-                    setSearchCriteria({
-                        ...searchCriteria,
-                        dataType: "Foundation,SR Legacy,Branded" 
-                    })
+                    newDataType =  "Foundation,SR Legacy,Branded" 
                     : 
-                    setSearchCriteria({
-                        ...searchCriteria,
-                        dataType: "Branded" 
-                    })
+                    newDataType = "Branded" 
             }
+        }
+
+        const newCriteria = {
+            ...searchCriteria,
+            dataType: newDataType
+        }
+        saveCriteria(newCriteria)
+        setSearchCriteria(newCriteria)
+    }
+
+       // store updated mealList to persistant memory
+       async function saveCriteria(updatedCriteria: ISearchCriteria) { 
+        try {
+            await AsyncStorage.setItem('@search', JSON.stringify(updatedCriteria))
+        }
+        catch {
+            console.error("Error 11", "Save failure in SearchSettings.tsx")
         }
     }
 
     function updatePageSize(value: string) {
+        // no decimals allowed
+        value = Number(value).toFixed(0)
 
         if (Number(value) > 50) value = "50"
         else if (Number(value) < 1) value = "1"
 
-        setSearchCriteria({
+        const newCriteria = {
             ...searchCriteria,
             pageSize: value
-        })
+        }
+        saveCriteria(newCriteria)
+        setSearchCriteria(newCriteria)
     }
 
     return(

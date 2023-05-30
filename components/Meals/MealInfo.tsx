@@ -160,11 +160,14 @@ export default function MealInfo({ navigation, route }: any) {
                 if (newMultiplier>=0) {
                     updatedFoods = meal["foods"].map((food: any) => {
                         if (food["id"] === viewedFoodId) {
-                            const newQuantity = (100*newMultiplier).toFixed(2);
+                            const newQuantity = viewedFoodBrand === "Unbranded" ? 
+                                (100*newMultiplier).toFixed(2) 
+                                :
+                                (viewedFoodServings*newMultiplier).toFixed(2)
                             return({
                                 ...food,
                                 quantity: newQuantity,
-                                multiplier: newMultiplier
+                                multiplier: 1
                             })
                         }
                         else return food 
@@ -494,8 +497,7 @@ export default function MealInfo({ navigation, route }: any) {
 
     function navigateToMealBuilder() {
         if (!mealList) return
-        if (route.params["mode"]==='Home')  navigation.navigate('MealBuilderHome', { meal: mealList[mealIndex]})
-        else navigation.navigate('MealBuilder', { meal: mealList[mealIndex]})
+        navigation.navigate('MealBuilder', { meal: mealList[mealIndex]})
     }
 
     return (
@@ -593,7 +595,7 @@ export default function MealInfo({ navigation, route }: any) {
             <Portal.Host>
                 <FoodModal 
                     nutrition={viewedFoodNutrition} name={viewedFoodName} id={viewedFoodId} multiplier={viewedFoodMultiplier} servingSize={viewedFoodServings} unit={viewedFoodUnit}
-                    brand={viewedFoodBrand} toggle={toggleFoodModal} editMealFoods={editMealFoods} context={"MealInfo"} modalVisible={foodModalVisible}
+                    brand={viewedFoodBrand} toggle={toggleFoodModal} removeFromMeal={editMealFoods} editMealFoods={editMealFoods} context={"MealInfo"} modalVisible={foodModalVisible}
                 ></FoodModal>
             </Portal.Host>
 

@@ -21,14 +21,11 @@ export default function MealBuilder({ navigation, route }: any) {
     const [page, setPage] = useState<number>(1);
     const [hideButtons, setHideButtons] = useState<boolean>(false);
     const [inEditMode, setInEditMode] = useState<boolean>(false);
-    const HideButtonsContext: IButtonContext = { hideButtons, setHideButtons,};
     
     useEffect(() =>{
         setPage(1);
         setHideButtons(false);
-
-        if (route.params === undefined) newMeal();
-        else existingMeal(route.params.meal);
+        route.params === undefined ? newMeal() : existingMeal(route.params.meal);
     },[])
 
     function newMeal() {

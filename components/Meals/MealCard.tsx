@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'
+import React from 'react'
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, View, Pressable, Alert } from "react-native";
 import { Card } from "react-native-paper";
@@ -10,9 +11,6 @@ import FoodCardBase from '../FoodCardBase';
 export default function MealCard(props: any) {
 
     const  { mealList, setMealList } = useMealList();
-
-    useEffect(() => {
-    },[mealList])
 
     function showMoreInfo() {
         props.navigation.navigate('MealInfo', { id: props["id"] })

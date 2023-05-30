@@ -11,14 +11,14 @@ export default function FoodCardHead(props: any) {
 
     function nameSub() {
         if (props.name === undefined) return
-        let index = props.name.search(",")
+
+        const index = props.name.search(",")
         if (index === -1) return(-1) 
-        let sub;
-        if (props.name.at(index + 1) === ' ') sub = props.name.slice(index + 2)
-        else sub = props.name.slice(index + 1)
+
+        const sub = (props.name.at(index + 1) === ' ') ? props.name.slice(index + 2) : props.name.slice(index + 1)
         if (sub === "" || sub === undefined) return(-1);
-        sub = sub[0].toUpperCase() + sub.slice(1)
-        return sub;
+
+        return (sub[0].toUpperCase() + sub.slice(1))
     }
 
     return (

@@ -4,11 +4,11 @@ import { StyleSheet, Text, View } from "react-native";
 
 export default function FoodCardBase(props: any) {
 
-    const quantity = (props.quantity===undefined ? 1 : Number(props.quantity)/100)
+    const quantity = props.quantity===undefined ? 1 : Number(props.quantity)/100
 
     function getCalories() {
         if (props.nutrition === undefined) return("")
-        for (let nutrient of props.nutrition) {
+        for (const nutrient of props.nutrition) {
             // calories
             if (nutrient.nutrientName.includes("Energy")) {
                 if (nutrient.unitName.toUpperCase() === "KJ") {
@@ -23,8 +23,7 @@ export default function FoodCardBase(props: any) {
 
     function getFats() {
         if (props.nutrition === undefined) return("")
-        for (let nutrient of props.nutrition) {
-            // fats
+        for (const nutrient of props.nutrition) {
             if (nutrient.nutrientName.includes("Total lipid")) {
                 return(((nutrient.value)*quantity).toFixed(1)+"g") 
             }
@@ -34,8 +33,7 @@ export default function FoodCardBase(props: any) {
 
     function getCarbs() {
         if (props.nutrition === undefined) return("")
-        for (let nutrient of props.nutrition) {
-            // carbs
+        for (const nutrient of props.nutrition) {
             if (nutrient.nutrientName.includes("Carbohydrate")) {
                 return(((nutrient.value)*quantity).toFixed(1)+"g")
             }
@@ -45,8 +43,7 @@ export default function FoodCardBase(props: any) {
 
     function getProtein() {
         if (props.nutrition === undefined) return("")
-        for (let nutrient of props.nutrition) {
-            // protein
+        for (const nutrient of props.nutrition) {
             if (nutrient.nutrientName.includes("Protein")) {
                 return(((nutrient.value)*quantity).toFixed(1)+"g")
             }

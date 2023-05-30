@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'
+import React from 'react'
+
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button } from 'react-native-paper';
 import { useMealList } from '../../context/MealList';
@@ -7,10 +8,6 @@ import MealCard from './MealCard';
 export default function Meals({ navigation }: any) {
 
     const { mealList } = useMealList();
-
-    useEffect(() => {
-        
-    },[])
 
     return<>
         <SafeAreaView style={styles.safeView}>

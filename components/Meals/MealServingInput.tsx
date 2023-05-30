@@ -8,7 +8,7 @@ export default function MealServingInput(props: any) {
     }
 
     return(
-        <View style={(props.context==="Home") ? styles.homeTextInput:styles.textInput}>
+        <View style={styles.textInput}>
             <Text style={{fontSize: 12, color: '#757577', fontWeight: '500', paddingRight: 10}}>Number of servings: </Text>
             <TextInput  style={styles.servingTextInput}
                         selectionColor="#f7f7f7"  
@@ -22,18 +22,6 @@ export default function MealServingInput(props: any) {
 }
 
 const styles = StyleSheet.create({
-    homeTextInput: {
-        height: '100%',
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingLeft: 10,
-        marginHorizontal: 10,
-        padding: 10,
-        borderTopWidth: 1,
-        borderBottomWidth: 1,
-        borderColor: '#dadfe1',
-        width: '95%'
-    },
     textInput: {
         height: '10%',
         flexDirection: 'row',
