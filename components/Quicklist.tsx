@@ -70,7 +70,8 @@ export default function Quicklist({ navigation }: any) {
 
 const styles = StyleSheet.create({
     scrollview: {
-        height: '100%'
+        height: '100%',
+        backgroundColor: 'white'
     },
     text: {
         fontSize: 20,

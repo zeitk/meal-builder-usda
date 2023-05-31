@@ -15,10 +15,10 @@ const chartConfig = {
     strokeWidth: 2, // optional, default 3
     barPercentage: 0.5,
     useShadowColorFromDataset: false, // optional,
-    propsForLabels: {
-        fontSize: 17,
-        fontWeight: '300'
-    }
+    // propsForLabels: {
+    //     fontSize: 27,
+    //     fontWeight: '300'
+    // }
 };
 
 export default function Pie(props: any) {
@@ -60,17 +60,17 @@ export default function Pie(props: any) {
 
             else if (!fatFound && (nutrient["nutrientName"].includes("Total lipid") || nutrient["nutrientName"].includes("Total fat"))) {
                 fatFound = true
-                fats = nutrient["value"]
+                fats = nutrient["value"] * 9
             }
 
             else if (!carbsFound && nutrient["nutrientName"].includes("Carbohydrate")) {
                 carbsFound = true
-                carbs = nutrient["value"] 
+                carbs = nutrient["value"] * 4
             }
 
             else if (!proteinFound && nutrient["nutrientName"].includes("Protein")) {
                 proteinFound = true
-                protein = nutrient["value"] 
+                protein = nutrient["value"] * 4
             }
         }
 
@@ -108,6 +108,7 @@ export default function Pie(props: any) {
 
     return(
        <>
+        <Text style={{paddingBottom: 30, fontSize: 18, fontWeight: '400'}}>Caloric Breakdown</Text>
         <PieChart
             data={data}
             width={screenWidth}
@@ -119,7 +120,7 @@ export default function Pie(props: any) {
             center={[0, 0]}
             absolute={false}
             />
-        <Text style={{paddingTop: 15, fontSize: 15, fontWeight: '400'}}>Total Calories: {calories}</Text>
+        <Text style={{paddingTop: 20, fontSize: 15, fontWeight: '400'}}>Total Calories: {calories}</Text>
        </>
     )
 }

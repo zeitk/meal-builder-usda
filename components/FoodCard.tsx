@@ -9,6 +9,7 @@ import FoodCardHead from './FoodCardHead';
 export default function FoodCard(props: any) {
 
     const [isPressed, setIsPressed] = useState<Boolean>(false)
+    const [multiplier, setMultiplier] = useState<number>(1)
 
     function showMoreInfo(quantity: any) {
 
@@ -19,10 +20,14 @@ export default function FoodCard(props: any) {
 
             // if item is pressed we're either removing the item or updating its quantity
             if (isPressed) {
-                if ((typeof quantity)==="string") props.callback(2, index, quantity)
+                if ((typeof quantity)==="string") {
+                    props.callback(2, index, quantity)
+                    setMultiplier(Number(quantity)/Number(props.servingSize))
+                }
                 else {                
                     setIsPressed(false)
                     props.callback(1, index, -1)
+                    setMultiplier(1)
                 }
             }
             
@@ -64,7 +69,7 @@ export default function FoodCard(props: any) {
                             <View style={styles.infoTextView}>
                                 <View style={styles.mealTitleView}>
                                     <FoodCardHead name={props.name} brand={props.brand}></FoodCardHead>
-                                    <FoodCardBase name={props.name} nutrition={props.nutrients}></FoodCardBase>
+                                    <FoodCardBase name={props.name} nutrition={props.nutrients} multiplier={multiplier}></FoodCardBase>
                                 </View>
                                 { (isPressed) 
                                 ? 

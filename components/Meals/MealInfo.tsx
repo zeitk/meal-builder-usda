@@ -223,13 +223,15 @@ export default function MealInfo({ navigation, route }: any) {
         let name: string;
         let unit: string;
         let energyFound: boolean;
+        let carbsFound: boolean;
 
         foods.forEach((foodItem: any, i: number) => {
 
             multiplier = foodItem["multiplier"]
             if (i == 0) {
                 // use the first foods data as a template
-                energyFound = false;
+                energyFound = false
+                carbsFound = false
                 foodItem["nutrition"].forEach((nutrient: any) => {
 
                     // sort nutrients in their respective buckets
@@ -253,7 +255,9 @@ export default function MealInfo({ navigation, route }: any) {
                         }
                         
                         else if (nutrient.nutrientName.includes("Carbohydrate")) {
+                            if (carbsFound) return
                             name = "Carbohydrates"
+                            carbsFound = true
                             macros[name] = {
                                 nutrientName: name,
                                 value: Number((nutrient["value"]*multiplier).toFixed(2)),
@@ -291,7 +295,9 @@ export default function MealInfo({ navigation, route }: any) {
             else {
 
                 currentFoodNutrients = foodItem["nutrition"];
-                energyFound = false;
+                energyFound = false
+                carbsFound = false
+
                 // sum up nutrients
                 currentFoodNutrients.map((nutrient: any) => {
 
@@ -321,7 +327,9 @@ export default function MealInfo({ navigation, route }: any) {
                             
                             // carbs may be named differently
                             else if (name.includes("Carbohydrate")) {
+                                if (carbsFound) return
                                 name = "Carbohydrates"
+                                carbsFound = true
                                 macros[name] = {
                                     nutrientName: name,
                                     value: Number((nutrient["value"]*multiplier).toFixed(2)),

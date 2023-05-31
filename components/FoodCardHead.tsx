@@ -5,7 +5,8 @@ import { StyleSheet, Text } from "react-native";
 export default function FoodCardHead(props: any) {
 
     function nameMain() {
-        if (props.name === undefined) return
+        if (props.name === undefined) return ""
+        if (props.brand !== "Unbranded") return (props.name)
         return (props.name.split(","))[0]
     }
 
@@ -13,10 +14,10 @@ export default function FoodCardHead(props: any) {
         if (props.name === undefined) return
 
         const index = props.name.search(",")
-        if (index === -1) return(-1) 
+        if (index === -1) return("") 
 
         const sub = (props.name.at(index + 1) === ' ') ? props.name.slice(index + 2) : props.name.slice(index + 1)
-        if (sub === "" || sub === undefined) return(-1);
+        if (sub === "" || sub === undefined) return("");
 
         return (sub[0].toUpperCase() + sub.slice(1))
     }
@@ -24,11 +25,17 @@ export default function FoodCardHead(props: any) {
     return (
         <>
             { (props.brand !== "Unbranded") && 
+                <>
                 <Text numberOfLines={1} style={styles.titleText}>{props.brand}</Text>
+                <Text numberOfLines={2} style={(props.brand === "Unbranded") ? styles.titleText : styles.subText}>{nameMain()}</Text>
+                </>
             }
-            <Text numberOfLines={1} style={(props.brand === "Unbranded") ? styles.titleText : styles.subText}>{nameMain()}</Text>
-            { (nameSub() !== -1 && props.brand === "Unbranded") &&
+            
+            { (props.brand === "Unbranded") &&
+                <>
+                <Text numberOfLines={1} style={(props.brand === "Unbranded") ? styles.titleText : styles.subText}>{nameMain()}</Text>
                 <Text numberOfLines={2} style={styles.subText}>{nameSub()}</Text>
+                </>
             }
         </>
     );
