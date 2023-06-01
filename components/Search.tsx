@@ -26,6 +26,7 @@ export default function Search({ navigation } : any) {
 
     // modal and table related states
     const [exampleBanner, setExampleBanner] = useState<String>("")
+    const [errorBanner, setErrorBanner] = useState<string>("")
     const [nutrition, setNutrition] = useState<any>({})
     const [modalVisible, setModalVisible] = useState<boolean>(false);
     const [currentId, setCurrentId] = useState<string>("");
@@ -85,13 +86,25 @@ export default function Search({ navigation } : any) {
             headers: {
                 "Content-Type": "application/json"
             }
-        })
-            .then(res => res.json())
+            })
+            .then((res) => {
+                if (res.ok) {
+                    // HTTP response was successful
+                    return res.json();
+                } 
+                else {
+                    // Handle non-successful response
+                    setErrorBanner("Error " + (res.status).toString())
+                }
+            })
             .then(json => {
                 setTotalItems(json.totalHits);
-                if (json.totalHits === 0) return;
+                if (json.totalHits === 0) {
+                    setErrorBanner("Your search returned no items")
+                    return
+                }
                 sortItems(json.foods)
-            })
+        })
         scrollRef.current?.scrollTo({
             y: 0,
             animated: false
@@ -103,9 +116,19 @@ export default function Search({ navigation } : any) {
         items.sort((a: any, b: any) => {
             if (a["foodCategory"]===undefined || a["foodCategory"]===null) return b
             else if (b["foodCategory"]===undefined || b["foodCategory"]===null) return a
-            else return a["foodCategory"].localeCompare(b["foodCategory"])
+            return sortHelper(a,b)
         })
         setItems(items)
+    }
+
+    function sortHelper(a: any, b: any) {
+        if (a["foodCategory"]!=="Baby Foods" && b["foodCategory"]!=="Baby Foods") {
+            return a["foodCategory"].localeCompare(b["foodCategory"])
+        }
+        else {
+            if (a["foodCategory"]==="Baby Foods") return b
+            else  return a
+        }
     }
 
     function moreInfo(id: number, name: string, nutrition: any) {
@@ -116,7 +139,11 @@ export default function Search({ navigation } : any) {
                 if (item["dataType"] === "Branded") {
                     setCurrentServing(item["servingSize"].toFixed(1))
                     setCurrentUnit(item["servingSizeUnit"])
-                    setCurrentBrand(item["brandName"])
+                    item["brandName"]===null 
+                        ? 
+                        setCurrentBrand(item["brandName"])
+                        :
+                        setCurrentBrand(item["brandOwner"])
                 }
                 else {
                     setCurrentServing(100)
@@ -139,11 +166,12 @@ export default function Search({ navigation } : any) {
             <SearchBar callback={beginSearch} placeholderTextColor={"#646569"} navigation={navigation} mode={"search"}></SearchBar>
             { (totalItems<1) &&
                 <View style={styles.messageTextView}>
-                    { (totalItems===0) ?
-                        <Text style={styles.exampleBannerText}>Your search returned no items</Text>:
+                    { (totalItems===0) 
+                        ?
+                        <Text style={styles.exampleBannerText}>{errorBanner}</Text>
+                        :
                         <Text style={styles.exampleBannerText}>Loading...</Text>
                     }
-                   
                 </View>
             }
             <ScrollView ref={scrollRef} style={styles.scrollView}> 
@@ -154,6 +182,8 @@ export default function Search({ navigation } : any) {
                 )}
                 {
                     items.map((item: any, i: number) => {
+                        let brand = (item.dataType === "Branded") ? item.brandName : "Unbranded"
+                        if (brand === undefined) brand = item.brandOwner
                         if (i === 0 || (i > 0 && items[i-1]["foodCategory"]!==items[i]["foodCategory"])) {
                             return(
                                 <View key={i} >
@@ -161,13 +191,14 @@ export default function Search({ navigation } : any) {
                                         <Text style={styles.foodCateogoryText}>{item["foodCategory"]}</Text>
                                     </View>
                                     <FoodCard id={item.fdcId} name={item.description} nutrients={item.foodNutrients} 
-                                        brand={(item.dataType === "Branded") ? item.brandName : "Unbranded"} callback={moreInfo} mode={0}></FoodCard>
+                                        brand={brand} callback={moreInfo} mode={0}>
+                                    </FoodCard>
                                 </View>
                             )
                         }
                         else return( 
                             <FoodCard key={i} id={item.fdcId} name={item.description} nutrients={item.foodNutrients} 
-                                brand={(item.dataType === "Branded") ? item.brandName : "Unbranded"} callback={moreInfo} mode={0}>
+                                brand={brand} callback={moreInfo} mode={0}>
                             </FoodCard>
                             )
                     })

@@ -21,6 +21,7 @@ export default function FoodCard(props: any) {
             // if item is pressed we're either removing the item or updating its quantity
             if (isPressed) {
                 if ((typeof quantity)==="string") {
+                    if (quantity==="") return
                     props.callback(2, index, quantity)
                     setMultiplier(Number(quantity)/Number(props.servingSize))
                 }
@@ -79,7 +80,7 @@ export default function FoodCard(props: any) {
                                     <TextInput  
                                         style={styles.quantityTextInput}
                                         selectionColor="#f7f7f7"  
-                                        placeholderTextColor="#adadad"
+                                        placeholderTextColor="black"
                                         keyboardType={"numeric"} 
                                         returnKeyType="done" 
                                         onSubmitEditing={(value) => showMoreInfo(value.nativeEvent.text) } 

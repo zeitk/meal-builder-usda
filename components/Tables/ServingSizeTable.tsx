@@ -14,7 +14,7 @@ export default function ServingSizeTable(props: any) {
                 <Text style={{fontSize: 12, color: '#757577', fontWeight: '500', paddingRight: 10}}>Amount: </Text>
                 <TextInput  style={styles.textInput}
                             selectionColor="#f7f7f7"
-                            placeholderTextColor="#adadad"  
+                            placeholderTextColor="black"  
                             keyboardType={"numeric"} 
                             returnKeyType="done" 
                             onEndEditing={(value) => {
