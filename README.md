@@ -20,3 +20,5 @@ After saving their work, users may view the meal's nutritional information and c
 <img src="https://github.com/zeitk/meal-builder-usda/blob/main/meal_card_example.JPG" alt="Image" height="1000" />
 User-made meals are shown in the form of meal cards. Meal cards may be pressed, allowing the user to view and edit the foods
 and see the quantitative data of the meal. Servings of the meal can also be changed. Users may delete the meal by pressing the trash bin icon on the Meal Card.
+
+<img src="https://github.com/zeitk/meal-builder-usda/blob/main/pie_chart_example.JPG" alt="Image" height="1000" />
