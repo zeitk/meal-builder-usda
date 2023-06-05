@@ -306,6 +306,7 @@ export default function MealInfo({ navigation, route }: any) {
 
                         name = nutrient["nutrientName"]
                         if (name.includes("Energy")) name = "Energy"
+                        if (name.includes("Carbohydrate")) name = "Carbohydrates"
 
                         if (macros[name]===undefined) {
 
@@ -367,8 +368,8 @@ export default function MealInfo({ navigation, route }: any) {
                             
                             // carbs may be named differently
                             else if (name.includes("Carbohydrate")) {
-                                amount = macros[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
                                 name = "Carbohydrates"
+                                amount = macros[name]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
                                 macros[name] = {
                                     ...macros[name],
                                     value: amount,

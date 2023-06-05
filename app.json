@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "nutrition-tracker",
+    "name": "Meal Builder",
     "slug": "nutrition-tracker",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -18,7 +18,9 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zeitkellett.meal-builder",
+      "buildNumber": 2
     },
     "android": {
       "adaptiveIcon": {
@@ -28,6 +30,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "860eb9aa-83ba-4dd8-ac92-a82d61236e6e"
+      }
     }
   }
 }
