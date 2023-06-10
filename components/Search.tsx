@@ -16,16 +16,16 @@ const examples: string[] = [
     "Egg"
 ]
 
-export default function Search({ navigation } : any) {
+export default function Search(props : any) {
 
     // search related states
     const [items, setItems] = useState<any>([]);
+    const [lastSearch,setLastSearch] = useState<string>("")
     const [totalItems, setTotalItems] = useState<number>(-1);
     const scrollRef = useRef<ScrollView | null>(null);
     const { searchCriteria } = useCriteria();
 
     // modal and table related states
-    const [exampleBanner, setExampleBanner] = useState<String>("")
     const [errorBanner, setErrorBanner] = useState<string>("")
     const [nutrition, setNutrition] = useState<any>({})
     const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -36,35 +36,30 @@ export default function Search({ navigation } : any) {
     const [currentBrand, setCurrentBrand] = useState<string>("")
 
     useEffect(() => {
-        
         //reset total items
         setTotalItems(-1)
 
-        // have example search 
-        const searchExample = examples[Math.floor(Math.random()*examples.length)]
-        searchItems(searchExample)
-        setExampleBanner(searchExample)
+        // begin search if coming from settings
+        if (lastSearch !== "")  beginSearch(lastSearch)
 
         // close modal if it's open
-        if (navigation.getState().type === "tab") {
-            navigation.addListener('tabPress', () => {
+        if (props.navigation.getState().type === "tab") {
+            props.navigation.addListener('tabPress', () => {
                 setModalVisible(false)
-            });
-        }
-
-    },[navigation])
+        })}
+    },[props])
 
     const beginSearch = (input: string) => {
         // don't search if there's nothing to search for, or if we just pressed cancel
         if (input==="") return
 
         // get rid of example banner and begin search
-        setExampleBanner("")
+        setErrorBanner("Loading...")
         searchItems(input)
     }
 
     const searchItems = ((input: any) => {
-
+        
         const dataTypeString: string = (searchCriteria?.dataType === "" ? 'Foundation,SR Legacy': searchCriteria!.dataType)
         const pageSizeString: string = (searchCriteria?.pageSize === "" ? '10': searchCriteria!.pageSize)
 
@@ -103,6 +98,7 @@ export default function Search({ navigation } : any) {
                     setErrorBanner("Your search returned no items")
                     return
                 }
+                setLastSearch(input)
                 sortItems(json.foods)
         })
         scrollRef.current?.scrollTo({
@@ -163,23 +159,18 @@ export default function Search({ navigation } : any) {
 
     return <>
         <SafeAreaView style={styles.safeView}>
-            <SearchBar callback={beginSearch} placeholderTextColor={"#646569"} navigation={navigation} mode={"search"}></SearchBar>
+            <SearchBar callback={beginSearch} placeholderTextColor={"#646569"} navigation={props.navigation} mode={"search"}></SearchBar>
             { (totalItems<1) &&
                 <View style={styles.messageTextView}>
-                    { (totalItems===0) 
+                    { (errorBanner!=="") 
                         ?
                         <Text style={styles.exampleBannerText}>{errorBanner}</Text>
                         :
-                        <Text style={styles.exampleBannerText}>Loading...</Text>
+                        <Text style={styles.exampleBannerText}>Enter a search above</Text>
                     }
                 </View>
             }
             <ScrollView ref={scrollRef} style={styles.scrollView}> 
-                {exampleBanner!=="" && (
-                    <View style={styles.exampleBanner}>
-                        <Text style={styles.exampleBannerText}>Example Search - {exampleBanner}</Text>
-                    </View> 
-                )}
                 {
                     items.map((item: any, i: number) => {
                         let brand = (item.dataType === "Branded") ? item.brandName : "Unbranded"

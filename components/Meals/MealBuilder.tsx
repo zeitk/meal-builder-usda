@@ -268,7 +268,9 @@ export default function MealBuilder({ navigation, route }: any) {
                             
                             // carbs may be named differently
                             else if (name.includes("Carbohydrate")) {
+                                if (carbsFound) return
                                 name = "Carbohydrates"
+                                carbsFound = true
                                 amount = macros[name]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
                                 macros[name] = {
                                     ...macros[name],

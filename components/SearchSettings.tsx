@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function SearchSettings({ navigation }: any) {
 
     const { searchCriteria, setSearchCriteria } = useCriteria();
+    const changeRef = useRef<boolean>(false)
     const ref = useRef<any>(null)
 
     function updateCriteria(text: string, checked: boolean) {
@@ -47,6 +48,7 @@ export default function SearchSettings({ navigation }: any) {
         }
         saveCriteria(newCriteria)
         setSearchCriteria(newCriteria)
+        changeRef.current = true;
     }
 
        // store updated mealList to persistant memory
@@ -72,6 +74,20 @@ export default function SearchSettings({ navigation }: any) {
         }
         saveCriteria(newCriteria)
         setSearchCriteria(newCriteria)
+        changeRef.current = true;
+    }
+
+    function returnToSearch() {
+
+        if (changeRef.current === true) {
+            navigation.navigate({
+                name: 'Search',
+                params: {hasChanged: true},
+                merge: true
+            })
+        }
+
+        else navigation.goBack()
     }
 
     return(
@@ -109,7 +125,7 @@ export default function SearchSettings({ navigation }: any) {
                 </View>
             </View>
             <View style={styles.buttonView}>
-                <Button onPress={() => navigation.goBack()} textColor="#22a811" children="Save" contentStyle={{height:75}} labelStyle={styles.buttonText} style={styles.button} />
+                <Button onPress={returnToSearch} textColor="#22a811" children="Save" contentStyle={{height:75}} labelStyle={styles.buttonText} style={styles.button} />
             </View>
         </SafeAreaView>
     )

@@ -12,33 +12,26 @@ import { IFood } from '../../interfaces/Interfaces';
 import { useCriteria } from '../../context/CriteriaContext';
 import ButtonsContext from '../../context/ButtonsContext';
 
-const examples: string[] = [
-    "Potato",
-    "Corn",
-    "Bread",
-    "Egg"
-]
-
 export default function SearchFromMeals(props: any) {
 
     // search related states
     const [items, setItems] = useState<any>([]);
-    const [totalItems, setTotalItems] = useState<number>(-1);
+    const [lastSearch, setLastSearch]  = useState<string>("")
+    const [totalItems, setTotalItems] = useState<number>(-1)
     const scrollRef = useRef<ScrollView | null>(null)
     const { searchCriteria } = useCriteria();
 
     // modal and table related states
-    const [exampleBanner, setExampleBanner] = useState<String>("")
     const [errorBanner, setErrorBanner] = useState<string>("")
     const [nutrition, setNutrition] = useState<any>({})
-    const [modalVisible, setModalVisible] = useState<boolean>(false);
-    const [currentId, setCurrentId] = useState<string>("");
-    const [currentName, setCurrentName] = useState<string>("");
-    const [currentIsInMeal, setCurrentIsInMeal] = useState<boolean>(false);
-    const [currentUnit, setCurrentUnit] =  useState<string>("");
-    const [currentServing, setCurrentServing] =  useState<number>(1);
+    const [modalVisible, setModalVisible] = useState<boolean>(false)
+    const [currentId, setCurrentId] = useState<string>("")
+    const [currentName, setCurrentName] = useState<string>("")
+    const [currentIsInMeal, setCurrentIsInMeal] = useState<boolean>(false)
+    const [currentUnit, setCurrentUnit] =  useState<string>("")
+    const [currentServing, setCurrentServing] =  useState<number>(1)
     const [currentBrand, setCurrentBrand] = useState<string>("")
-    const { hideButtons, setHideButtons } = useContext(ButtonsContext);
+    const { hideButtons, setHideButtons } = useContext(ButtonsContext)
 
     // meal related context
     const { currentMeal, setCurrentMeal} = useContext(CurrentMealContext)
@@ -47,11 +40,9 @@ export default function SearchFromMeals(props: any) {
         //reset total items
         setTotalItems(-1)
 
-        // have example search 
-        const searchExample = examples[Math.floor(Math.random()*examples.length)]
-        searchItems(searchExample)
-        setExampleBanner(searchExample)
-    },[])
+        // perform a search if we're returning from settings
+        if (lastSearch !== "") beginSearch(lastSearch)
+    },[props])
 
     function editMealFoods(multiplier: number, food: IFood) {
         // TODO: more graceful error
@@ -89,7 +80,7 @@ export default function SearchFromMeals(props: any) {
         if (input==="") return
 
         // get rid of example banner and begin search
-        setExampleBanner("")
+        setErrorBanner("Loading...")
         searchItems(input)
     }
 
@@ -134,6 +125,7 @@ export default function SearchFromMeals(props: any) {
                     setErrorBanner("Your search returned no items")
                     return
                 }
+                setLastSearch(input)
                 sortItems(json.foods)
             })
         scrollRef.current?.scrollTo({
@@ -214,19 +206,13 @@ export default function SearchFromMeals(props: any) {
             <SearchBar callback={beginSearch} placeholderTextColor={"#646569"} mode={"Meals"} navigation={props.navigation}></SearchBar>
             { (totalItems<1) &&
                 <View style={styles.messageTextView}>
-                    { (totalItems===0) ?
+                    { (errorBanner!=="") ?
                         <Text style={styles.exampleBannerText}>{errorBanner}</Text>:
-                        <Text style={styles.exampleBannerText}>Loading...</Text>
+                        <Text style={styles.exampleBannerText}>Enter a search above</Text>
                     }
                 </View>
             }
             <ScrollView ref={scrollRef} style={styles.scrollView}>
-                {/* if this is an example search, display a banner */}
-                {exampleBanner!=="" && (
-                    <View style={styles.exampleBanner}>
-                        <Text style={styles.exampleBannerText}>Example Search - {exampleBanner}</Text>
-                    </View> 
-                )}
                 {
                     items.map((item: IFood, i: number) => {
 
