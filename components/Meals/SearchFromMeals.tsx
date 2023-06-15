@@ -11,6 +11,7 @@ import { SearchBar } from '../SearchBar';
 import { IFood } from '../../interfaces/Interfaces';
 import { useCriteria } from '../../context/CriteriaContext';
 import ButtonsContext from '../../context/ButtonsContext';
+import CurrentPlanContext from '../../context/CurrentPlan';
 
 export default function SearchFromMeals(props: any) {
 
@@ -27,14 +28,16 @@ export default function SearchFromMeals(props: any) {
     const [modalVisible, setModalVisible] = useState<boolean>(false)
     const [currentId, setCurrentId] = useState<string>("")
     const [currentName, setCurrentName] = useState<string>("")
-    const [currentIsInMeal, setCurrentIsInMeal] = useState<boolean>(false)
     const [currentUnit, setCurrentUnit] =  useState<string>("")
     const [currentServing, setCurrentServing] =  useState<number>(1)
     const [currentBrand, setCurrentBrand] = useState<string>("")
     const { hideButtons, setHideButtons } = useContext(ButtonsContext)
 
-    // meal related context
+    // meal and plan related 
     const { currentMeal, setCurrentMeal} = useContext(CurrentMealContext)
+    const { currentPlan, setCurrentPlan} = useContext(CurrentPlanContext)
+    const [currentIsInMeal, setCurrentIsInMeal] = useState<boolean>(false)
+    const [currentIsInPlan, setCurrentIsInPlan] = useState<boolean>(false)
 
     useEffect(() => {
         //reset total items
@@ -45,33 +48,64 @@ export default function SearchFromMeals(props: any) {
     },[props])
 
     function editMealFoods(multiplier: number, food: IFood) {
-        // TODO: more graceful error
-        if (currentMeal===null) return
-        if (Object.keys(food.nutrition).length === 0 ) return
+        
+        // if we're in meal builder
+        if (currentMeal!==null) {
+            if (Object.keys(food.nutrition).length === 0 ) return
 
-        // deep copy to prevent pointer issues
-        let selectedFood = JSON.parse(JSON.stringify(food))
+            // deep copy to prevent pointer issues
+            let selectedFood = JSON.parse(JSON.stringify(food))
 
-        if (multiplier > 0) {
-            selectedFood["quantity"] =  selectedFood["servingSize"] 
-            selectedFood["multiplier"] = multiplier;
-            setCurrentMeal({
-                ...currentMeal,
-                foods: [
-                ...currentMeal["foods"],
-                selectedFood
-            ]})
-            setCurrentIsInMeal(true)
+            if (multiplier > 0) {
+                selectedFood["quantity"] =  selectedFood["servingSize"] 
+                selectedFood["multiplier"] = multiplier;
+                setCurrentMeal({
+                    ...currentMeal,
+                    foods: [
+                    ...currentMeal["foods"],
+                    selectedFood
+                ]})
+                setCurrentIsInMeal(true)
+            }
+        }
+
+        // if we're in plan builder
+        if (currentPlan!==null) {
+            if (Object.keys(food.nutrition).length === 0 ) return
+
+            // deep copy to prevent pointer issues
+            let selectedFood = JSON.parse(JSON.stringify(food))
+
+            if (multiplier > 0) {
+                selectedFood["quantity"] =  selectedFood["servingSize"] 
+                selectedFood["multiplier"] = multiplier;
+                setCurrentPlan({
+                    ...currentPlan,
+                    foods: [
+                    ...currentPlan["foods"],
+                    selectedFood
+                ]})
+                setCurrentIsInPlan(true)
+            }
         }
     }
 
     function removeFromMeal(food: IFood) {
-        if (currentMeal === null) return
-        setCurrentMeal({
-            ...currentMeal,
-            foods: currentMeal["foods"].filter((item:any) => item["name"] !== food["name"])
-        });
-        setCurrentIsInMeal(false)
+        if (currentMeal !== null) {
+            setCurrentMeal({
+                ...currentMeal,
+                foods: currentMeal["foods"].filter((item:any) => item["name"] !== food["name"])
+            });
+            setCurrentIsInMeal(false)
+        }
+
+        if (currentPlan !== null) {
+            setCurrentPlan({
+                ...currentPlan,
+                foods: currentPlan["foods"].filter((item:any) => item["name"] !== food["name"])
+            });
+            setCurrentIsInPlan(false)
+        }
     }
 
     // helper function searching foods
@@ -178,17 +212,27 @@ export default function SearchFromMeals(props: any) {
     }
 
     function isCurrentInMeal(id: String) {
-        // TODO: more graceful error
-        if (currentMeal===null) return
+        if (currentMeal!==null) {
+            let found: boolean = false;
+            currentMeal["foods"].forEach((food: any) => {
+                if (food["id"] === id)  {
+                    setCurrentIsInMeal(true)
+                    found = true;
+                }
+            })
+            if (!found) setCurrentIsInMeal(false);
+        }
 
-        let found: boolean = false;
-        currentMeal["foods"].forEach((food: any) => {
-            if (food["id"] === id)  {
-                setCurrentIsInMeal(true)
-                found = true;
-            }
-        })
-        if (!found) setCurrentIsInMeal(false);
+        if (currentPlan!==null) {
+            let found: boolean = false;
+            currentPlan["foods"].forEach((food: any) => {
+                if (food["id"] === id)  {
+                    setCurrentIsInPlan(true)
+                    found = true;
+                }
+            })
+            if (!found) setCurrentIsInPlan(false);
+        }
     }
 
     function toggleModal() {
@@ -242,8 +286,8 @@ export default function SearchFromMeals(props: any) {
 
             <Portal.Host>
                 <FoodModal nutrition={nutrition} brand={currentBrand} name={currentName} id={currentId} servingSize={currentServing} unit={currentUnit}
-                    editMealFoods={editMealFoods} toggle={toggleModal} removeFromMeal={removeFromMeal} modalVisible={modalVisible} isInMeal={currentIsInMeal} 
-                    context={"MealBuilder"}>
+                    editMealFoods={editMealFoods} toggle={toggleModal} removeFromMeal={removeFromMeal} modalVisible={modalVisible} isInMeal={currentIsInMeal} isInPlan={currentIsInPlan}
+                    context={currentPlan === null ?  "MealBuilder" : "PlanBuilder"}>
                 </FoodModal>
             </Portal.Host>
 

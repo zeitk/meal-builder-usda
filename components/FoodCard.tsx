@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { StyleSheet, Text, View, Pressable, TextInput } from "react-native";
 import { Card } from "react-native-paper";
@@ -8,12 +8,16 @@ import FoodCardHead from './FoodCardHead';
 
 export default function FoodCard(props: any) {
 
-    const [isPressed, setIsPressed] = useState<Boolean>(false)
+    useEffect(() => {
+        if (props.pressed !== undefined) setIsPressed(props.pressed)
+    }, [props])
+
+    const [isPressed, setIsPressed] = useState<Boolean>(props.pressed !== undefined ? props.pressed : false)
     const [multiplier, setMultiplier] = useState<number>(1)
 
     function showMoreInfo(quantity: any) {
 
-        // if food is being added to meal 
+        // if food is being added to meal or plan
         if (props.mode===1) {
             // location in the quicklist
             const index = props.arrayIndex
@@ -42,6 +46,10 @@ export default function FoodCard(props: any) {
         // from 'Meals' tab
         else if (props.mode===2) {
            props.callback(props.id, props.name, props.nutrition)
+        }
+
+        else if (props.mode === 4) {
+            props.callback(props.id)
         }
 
         // if nutritional value is being viewed
@@ -98,11 +106,24 @@ export default function FoodCard(props: any) {
                             <View style={mealStyles.mealInfoOverall}>
                                 <View style={mealStyles.mealInfoTextView}>
                                     <FoodCardHead name={props.name} brand={props.brand}></FoodCardHead>
-                                    <Text numberOfLines={1} style={mealStyles.quantityText}>Quantity: {(Number(props.quantity) * props.multiplier).toFixed(0)}{props.unit}</Text>
+                                    <Text numberOfLines={1} style={mealStyles.quantityText}>Quantity: {(Number(props.quantity) * props.multiplier).toFixed(1)}{props.unit}</Text>
                                     <FoodCardBase nutrition={props.nutrients} quantity={(Number(props.quantity))} multiplier={props.multiplier}></FoodCardBase>
                                 </View>
                                 <View style={mealStyles.mealInfoIcon}>
                                     <Entypo name="edit" size={22} color="black" />
+                                </View>
+                            </View>
+                        }
+                        {/* Viewing from Plan Builder */}
+                        { (props.mode===4) &&
+                            <View style={styles.infoTextView}>
+                                <View style={styles.mealTitleView}>
+                                    <FoodCardHead name={props.name} brand={props.brand}></FoodCardHead>
+                                    <FoodCardBase name={props.name} nutrition={props.nutrients} multiplier={props.multiplier}></FoodCardBase>
+                                </View>
+                                <View style={styles.quantityView}>
+                                    <Text numberOfLines={2} style={styles.quantityText}>Quantity: </Text>
+                                    <Text>{(props.quantity * props.multiplier).toFixed(1)}{props.unit}</Text>
                                 </View>
                             </View>
                         }
@@ -194,7 +215,6 @@ const styles = StyleSheet.create({
 const mealStyles = StyleSheet.create({
     mealInfoTextView: {
         width: '85%',
-        paddingLeft: 12.5,
         alignItems: 'flex-start',
     },
     mealInfoTitleText: {

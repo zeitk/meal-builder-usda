@@ -4,24 +4,23 @@ import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Button, Portal } from "react-native-paper";
 import { StatusBar } from 'expo-status-bar';
-import { useMealList } from "../../context/MealList";
 import FoodCard from "../FoodCard";
 import NutritionTable from "../Tables/NutritionTable";
 import FoodModal from "../FoodModal";
-import { IMeal } from "../../interfaces/Interfaces";
-import MealServingInput from "./MealServingInput";
+import { IFood, IMeal, IPlan } from "../../interfaces/Interfaces";
 import Pie from "../Tables/PieChart";
+import { usePlanList } from "../../context/PlanList";
+import MealCard from "../Meals/MealCard";
+import Bar from "../Tables/BarChart";
 
 
-export default function MealInfo({ navigation, route }: any) {
+export default function PlanInfo( props: any) {
 
     // states
     const [page, setPage] = useState<number>(1);
     const [maxPage, setMaxPage] = useState<number>(3);
     const [multiplier, setMultiplier] = useState<number>(1);
-    const [isNameEditing, setIsNameEditing] = useState<boolean>(false)
-    const {mealList, setMealList} = useMealList();
-    const [name, setName] = useState<string>("")
+    const { planList, setPlanList } = usePlanList();
 
     // modal related states
     const [viewedFoodId, setViewedFoodId] = useState<number>()
@@ -33,24 +32,25 @@ export default function MealInfo({ navigation, route }: any) {
     const [viewedFoodMultiplier, setViewedFoodMultiplier] = useState<number>(1)
     const [foodModalVisible, setFoodModalVisible] = useState<boolean>(false);
 
-    if (!mealList) {
+    if (!planList) {
         throw new Error(
             "mealList must be accessed through MealListContext.Provider"
         );
     }
 
     // non-state constants
-    var mealIndex = 0;
-    mealList.forEach((meal: any, index: number) => {
-        if (meal["id"]===route.params["id"]) {
-            mealIndex = index;
+    var planIndex = 0;
+    planList.forEach((plan: any, index: number) => {
+        if (plan["id"]===props.route.params["id"]) {
+            plan = index;
             return
         }
     })
-    const macros = mealList[mealIndex]["data"]["macros"]
-    const micros = mealList[mealIndex]["data"]["micros"]
-    const other = mealList[mealIndex]["data"]["other"]
-    const foods = mealList[mealIndex]["foods"]
+    const macros = planList[planIndex]["data"]["macros"]
+    const micros = planList[planIndex]["data"]["micros"]
+    const other = planList[planIndex]["data"]["other"]
+    const foods = planList[planIndex]["foods"]
+    const meals = planList[planIndex]["meals"]
     const ref = useRef<any>(null)
 
     // set page and meal multiplier to 1
@@ -58,14 +58,13 @@ export default function MealInfo({ navigation, route }: any) {
         setPage(1)
         getMaxPage()
         setMultiplier(1);
-        setIsNameEditing(false)
-        setName(mealList[mealIndex]["name"])
-        setFoodModalVisible(false)
-    }, [])
+        setFoodModalVisible(false) 
+        if (props.route.params !== undefined && props.route.params.meal !== undefined)  editPlanMeals(props.route.params.meal)
+    }, [props.route])
 
     function closeModal() {
         //close modal
-        navigation.goBack()
+        props.navigation.goBack()
     }
 
     function toggleFoodModal() {
@@ -82,15 +81,10 @@ export default function MealInfo({ navigation, route }: any) {
     }
 
     function getMaxPage() {
-        let max = 3;
+        let max = 4;
         if (micros.length > 0) max++;
         if (other.length > 0) max++
         setMaxPage(max);
-    }
-
-    // set new serving size
-    function newServingQuantity(multiplier: string) {
-            setMultiplier(Number(multiplier))
     }
 
     function moreFoodInfo(foodId: number) {
@@ -108,78 +102,144 @@ export default function MealInfo({ navigation, route }: any) {
         })
     }
 
+    function moreMealInfo(mealId: number) {
+        if (planList === null) return
+        let mealIndex: number = -1;
+        planList[planIndex]["meals"].forEach((meal: IMeal, index: number) => {
+            if (mealId === meal["id"]) {
+                mealIndex = index;
+            }
+        }) 
+        if (mealIndex === -1) return
+        props.navigation.navigate({
+            name: 'MealBuilder',
+            params: {
+                meal:mealIndex,
+                plan:planIndex
+            }
+        })
+    }
+
     // this tag is used to either remove a food or to update a quantity
-    function editMealFoods(newMultiplier: number) {
-        
+    function editPlanFoods(newMultiplier: number) {
+
         // TODO: find a more graceful exit
-        if (mealList === null) return
+        if (planList === null) return
+
         // have flag for if we remove only food in list
         let haveRemovedLast = false;
-        const updatedMealList = mealList.map((meal: any, index: number) => {
-            if (index===mealIndex) {
+        const currentPlan = planList[planIndex]
+        
+        let updatedFoods;
 
-                let updatedFoods;
-
-                // if we're updating the quantity of the food, update only quantity and multiplier of the new food
-                if (newMultiplier>=0) {
-                    updatedFoods = meal["foods"].map((food: any) => {
-                        if (food["id"] === viewedFoodId) {
-                            return({
-                                ...food,
-                                multiplier: newMultiplier
-                            })
-                        }
-                        else return food 
+        // if we're updating the quantity of the food, update only quantity and multiplier of the new food
+        if (newMultiplier>=0) {
+            updatedFoods = currentPlan["foods"].map((food: any) => {
+                if (food["id"] === viewedFoodId) {
+                    return({
+                        ...food,
+                        multiplier: newMultiplier
                     })
                 }
+                else return food 
+            })
+        }
 
-                // if we're removing a food, filter it out from the meal
-                else {
-                    setFoodModalVisible(false);
-                    updatedFoods = meal["foods"].filter((food: any) => food["id"] != viewedFoodId )
-                    if (updatedFoods.length===0) {
-                        // return early to avoid updating all nutritional data
-                        haveRemovedLast = true
-                        return {}
-                    }
-                }
-
-                // update the nutritional data of the meal
-                const updatedData = updateMealData(updatedFoods);
-
-                return({
-                    ...meal,
-                    data: updatedData,
-                    foods: updatedFoods
-                })
+        // if we're removing a food, filter it out from the meal
+        else {
+            setFoodModalVisible(false);
+            updatedFoods = currentPlan["foods"].filter((food: any) => food["id"] != viewedFoodId )
+            if (updatedFoods.length===0) {
+                // return early to avoid updating all nutritional data
+                haveRemovedLast = true
             }
-            else return meal
+        }
+
+        const updatedData = updatePlanData(undefined, updatedFoods)
+
+        const updatedPlan: IPlan = ({
+            ...currentPlan,
+            foods: updatedFoods,
+            data: updatedData
         })
 
-        // delete meal if last food removed, update mealList otherwise
-        if (haveRemovedLast) {
-            const updatedMealList_deletion = mealList.filter((meal:any) => meal["id"] !== route.params["id"])
-            saveMealList(updatedMealList_deletion);
-            setMealList(updatedMealList_deletion); 
-            navigation.goBack();
+        const updatedPlanList = planList.map((plan: IPlan, index: number) => {
+            if (index===planIndex) return updatedPlan
+            else return plan
+        })
+
+        // delete plan if last item removed, update planList otherwise
+        if (haveRemovedLast && currentPlan["meals"].length === 0) {
+            const updatedPlanList_deletion = planList.filter((plan:any) => plan["id"] !== props.route.params["id"])
+            savePlanList(updatedPlanList_deletion);
+            setPlanList(updatedPlanList_deletion); 
+            props.navigation.goBack();
         }
         else {
-            saveMealList(updatedMealList)
-            setMealList(updatedMealList)
+            savePlanList(updatedPlanList)
+            setPlanList(updatedPlanList)
         }
     }
 
-    function updateMealData(updatedFoods: any) {
-        // this tag combines the nutritional data from each food into a single object
+    // this tag is used to either remove a food or to update a quantity
+    function editPlanMeals(newMeal: IMeal) {
 
-        let foods = updatedFoods
-        let multiplier: number;
+        // TODO: find a more graceful exit
+        if (planList === null) return
+        // have flag for if we remove only food in list
+        let haveRemovedLast = false;
+        const currentPlan = planList[planIndex]
+        const updatedPlanList = planList.map((plan: any, index: number) => {
+            if (index===planIndex) {
+
+                // replace the meal
+                const updatedMeals = plan["meals"].map((meal: any) => {
+                    if (meal["id"] === newMeal["id"]) return newMeal
+                    else return meal 
+                })
+
+                // update the nutritional data of the plan
+                const updatedData = updatePlanData(updatedMeals , undefined);
+
+                return({
+                    ...plan,
+                    data: updatedData,
+                    meals: updatedMeals
+                })
+            }
+            else return plan
+        })
+
+        // delete plan if last item removed, update planList otherwise
+        if (haveRemovedLast && currentPlan["foods"].length === 0) {
+            const updatedPlanList_deletion = planList.filter((plan:any) => plan["id"] !== props.route.params["id"])
+            savePlanList(updatedPlanList_deletion);
+            setPlanList(updatedPlanList_deletion); 
+            props.navigation.goBack();
+        }
+        else {
+            savePlanList(updatedPlanList)
+            setPlanList(updatedPlanList)
+        }
+    }
+
+    function updatePlanData(updatedMeals: IMeal[] | undefined, updatedFoods: IFood[] | undefined) {
+
+        if (planList === null) return 
+
+        // this tag combines the nutritional data from each food into a single object
+        const currentPlan = planList[planIndex]
+        const foods = updatedFoods !== undefined ? updatedFoods : currentPlan["foods"]
+        const meals = updatedMeals !== undefined ? updatedMeals : currentPlan["meals"]
+        let mealFoods: any = {}
 
         let macros: any = {}
         let micros: any = {}
         let other: any = {}
-        let currentFoodNutrients: any = {}
+        let currentFoodNutrients
 
+        let multiplier: number;
+        let mealMultiplier: number;
         let amount: number;
 
         // used for energy to handle duplicate entries and mismatching units
@@ -189,78 +249,17 @@ export default function MealInfo({ navigation, route }: any) {
         let energyFound: boolean;
         let carbsFound: boolean;
 
-        foods.forEach((foodItem: any, i: number) => {
-
-            multiplier = foodItem["multiplier"]
-            if (i == 0) {
-                // use the first foods data as a template
-                energyFound = false
-                carbsFound = false
-                foodItem["nutrition"].forEach((nutrient: any) => {
-
-                    // sort nutrients in their respective buckets
-                    if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) {
-                        
-                        // energy needs special handling 
-                        if (nutrient.nutrientName.includes("Energy")) {
-                            if (energyFound) return
-                            if (nutrient["unitName"] === "kJ") {
-                                value = Number((nutrient["value"] * 0.239006 * multiplier).toFixed(2))
-                            }
-                            else value =  Number((nutrient["value"]*multiplier).toFixed(2))
-                            unit = "kcal"
-                            name = "Energy"
-                            energyFound = true;
-                            macros[name] = {
-                                nutrientName: name,
-                                value: value,
-                                unitName: unit
-                            }
-                        }
-                        
-                        else if (nutrient.nutrientName.includes("Carbohydrate")) {
-                            if (carbsFound) return
-                            name = "Carbohydrates"
-                            carbsFound = true
-                            macros[name] = {
-                                nutrientName: name,
-                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
-                                unitName: nutrient["unitName"]
-                            }
-                        }
-
-                        else {
-                            macros[nutrient["nutrientName"]] = {
-                                nutrientName: nutrient["nutrientName"],
-                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
-                                unitName: nutrient["unitName"]
-                            }
-                        }
-
-                    }
-                    else if (nutrient.nutrientNumber < 605) {
-                        micros[nutrient["nutrientName"]] = {
-                            nutrientName: nutrient["nutrientName"],
-                            value: Number((nutrient["value"]*multiplier).toFixed(2)),
-                            unitName: nutrient["unitName"]
-                        }
-                    } 
-                    else {
-                        other[nutrient["nutrientName"]] = {
-                            nutrientName: nutrient["nutrientName"],
-                            value: Number((nutrient["value"]*multiplier).toFixed(2)),
-                            unitName: nutrient["unitName"]
-                        }
-                    }
-                })
-            }
+        // start with meals
+        meals.forEach((meal: IMeal) => {
             
+            mealFoods = meal["foods"]
+            mealMultiplier = meal["quantity"] === undefined ? 1 : meal["quantity"]
 
-            else {
-
+            mealFoods.forEach((foodItem: IFood) => {
+                multiplier = foodItem["multiplier"] * mealMultiplier
                 currentFoodNutrients = foodItem["nutrition"];
-                energyFound = false
-                carbsFound = false
+                energyFound = false;
+                carbsFound = false;
 
                 // sum up nutrients
                 currentFoodNutrients.map((nutrient: any) => {
@@ -292,9 +291,9 @@ export default function MealInfo({ navigation, route }: any) {
                             
                             // carbs may be named differently
                             else if (name.includes("Carbohydrate")) {
-                                if (carbsFound) return
+                                if (carbsFound) return;
                                 name = "Carbohydrates"
-                                carbsFound = true
+                                carbsFound = true;
                                 macros[name] = {
                                     nutrientName: name,
                                     value: Number((nutrient["value"]*multiplier).toFixed(2)),
@@ -332,7 +331,9 @@ export default function MealInfo({ navigation, route }: any) {
                             
                             // carbs may be named differently
                             else if (name.includes("Carbohydrate")) {
+                                if (carbsFound) return
                                 name = "Carbohydrates"
+                                carbsFound = true
                                 amount = macros[name]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
                                 macros[name] = {
                                     ...macros[name],
@@ -386,10 +387,146 @@ export default function MealInfo({ navigation, route }: any) {
                         }
                     }
                 })
-            }
+            })
         })
-        
-    
+
+        // now do foods
+        foods.forEach((foodItem: IFood) => {
+
+            multiplier = foodItem["multiplier"]
+            currentFoodNutrients = foodItem["nutrition"];
+            energyFound = false;
+            carbsFound = false;
+
+            // sum up nutrients
+            currentFoodNutrients.map((nutrient: any) => {
+
+                // sum macros
+                if (nutrient.nutrientNumber < 300 || nutrient.nutrientName.includes("Fatty") || nutrient.nutrientName.includes("Energy")) {
+
+                    name = nutrient["nutrientName"]
+                    if (name.includes("Energy")) name = "Energy"
+                    if (name.includes("Carbohydrate")) name = "Carbohydrates"
+
+                    if (macros[name]===undefined) {
+
+                        // energy needs special handling 
+                        if (name.includes("Energy")) {
+                            if (energyFound) return
+                            if (nutrient["unitName"] === "kJ") {
+                                value = Number((nutrient["value"] * 0.239006 * multiplier).toFixed(2))
+                            }
+                            else value =  Number((nutrient["value"]*multiplier).toFixed(2))
+                            unit = "kcal"
+                            energyFound = true;
+                            macros[name] = {
+                                nutrientName: name,
+                                value: value,
+                                unitName: unit
+                            }
+                        }
+                        
+                        // carbs may be named differently
+                        else if (name.includes("Carbohydrate")) {
+                            if (carbsFound) return;
+                            name = "Carbohydrates"
+                            carbsFound = true;
+                            macros[name] = {
+                                nutrientName: name,
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+
+                        else {
+                            macros[name] = {
+                                nutrientName: name,
+                                value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                                unitName: nutrient["unitName"]
+                            }
+                        }
+
+                    }
+                    
+                    else {
+
+                        // energy needs special handling 
+                        if (name.includes("Energy")) {
+                            if (energyFound) return
+                            if (nutrient["unitName"] === "kJ") {
+                                value = Number((nutrient["value"] * 0.239006 * multiplier).toFixed(2))
+                            }
+                            else value =  Number((nutrient["value"]*multiplier).toFixed(2))
+                            name = "Energy"
+                            energyFound = true;
+                            amount = macros[name]["value"] + value;
+                            macros[name] = {
+                                ...macros[name],
+                                value: amount,
+                            }
+                        }
+                        
+                        // carbs may be named differently
+                        else if (name.includes("Carbohydrate")) {
+                            if (carbsFound) return
+                            name = "Carbohydrates"
+                            carbsFound = true
+                            amount = macros[name]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                            macros[name] = {
+                                ...macros[name],
+                                value: amount,
+                            }
+                        }
+
+                        else {
+                            amount = macros[name]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                            macros[name] = {
+                                ...macros[name],
+                                value: amount,
+                            }
+                        }
+                    }
+                }
+
+                // sum micros
+                else if (nutrient.nutrientNumber < 605) {
+                    if (micros[nutrient["nutrientName"]]===undefined) {
+                        micros[nutrient["nutrientName"]] = {
+                            nutrientName: nutrient["nutrientName"],
+                            value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                            unitName: nutrient["unitName"]
+                        }
+                    }
+                    else {
+                        amount = micros[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                        micros[nutrient["nutrientName"]] = {
+                            ...micros[nutrient["nutrientName"]],
+                            value: amount,
+                        }
+                    }
+                } 
+
+                // sum other
+                else {
+                    if (other[nutrient["nutrientName"]]===undefined) {
+                        other[nutrient["nutrientName"]] = {
+                            nutrientName: nutrient["nutrientName"],
+                            value: Number((nutrient["value"]*multiplier).toFixed(2)),
+                            unitName: nutrient["unitName"]
+                        }
+                    }
+                    else {
+                        amount = other[nutrient["nutrientName"]]["value"] +  Number((nutrient["value"]*multiplier).toFixed(2))
+                        other[nutrient["nutrientName"]] = {
+                            ...other[nutrient["nutrientName"]],
+                            value: amount,
+                        }
+                    }
+                }
+            })
+            
+        })
+
         // convert to arrays so tables can parse data
         const macrosData = Object.values(macros)
         const microsData = Object.values(micros)
@@ -399,12 +536,13 @@ export default function MealInfo({ navigation, route }: any) {
         sortNutrients(macrosData, microsData)
 
         // return a modified meal with the new data to store in the meal list
-        const newData = {
+        const updatedData = {
             macros: macrosData,
             micros: microsData,
             other: otherData
         }
-        return newData;
+
+        return updatedData;
     }
 
     function sortNutrients(macros: any, micros: any) {
@@ -454,18 +592,18 @@ export default function MealInfo({ navigation, route }: any) {
     }
 
     // store updated mealList to persistant memory
-    async function saveMealList(updatedMealList: IMeal[]) { 
+    async function savePlanList(updatedPlanList: IMeal[]) { 
         try {
-            await AsyncStorage.setItem('@meallist', JSON.stringify(updatedMealList))
+            await AsyncStorage.setItem('@planlist', JSON.stringify(updatedPlanList))
         }
         catch {
-            console.error("Error 6", "Save failure in MealInfo.tsx")
+            console.error("Error 16", "Save failure in PlanInfo.tsx")
         }
     }
 
-    function navigateToMealBuilder() {
-        if (!mealList) return
-        navigation.navigate('MealBuilder', { meal: mealList[mealIndex], context: 'MealInfo'})
+    function navigateToPlanBuilder() {
+        if (!planList) return
+        props.navigation.navigate('PlanBuilder', { plan: planList[planIndex], context: 'PlanInfo'})
     }
 
     return (
@@ -473,16 +611,25 @@ export default function MealInfo({ navigation, route }: any) {
             <StatusBar style="light"></StatusBar>
             <View style={viewStyles.top}>
                 <View style={viewStyles.header}>
-                    <Text numberOfLines={1} style={textStyles.mealName}>{mealList[mealIndex]["name"]}</Text>
+                    <Text numberOfLines={1} style={textStyles.mealName}>{planList[planIndex]["name"]}</Text>
                 </View>
             </View>
             { (page === 1) &&
                 <View style={viewStyles.middle}>
                     <View style={viewStyles.foodsLabel}>
                         <Text style={textStyles.foodsLabel}>Items : </Text>
-                        <Button children="Edit Meal" textColor="#282728" labelStyle={textStyles.editButton} style={buttonStyles.addFood} onPress={navigateToMealBuilder}></Button>
+                        <Button children="Edit Plan" textColor="#282728" labelStyle={textStyles.editButton} style={buttonStyles.addFood} onPress={navigateToPlanBuilder}></Button>
                     </View>
                     <ScrollView style={viewStyles.scroll}>
+                    { 
+                        meals.map((meal: any, i: number) => {
+                                return (
+                                    <MealCard key={i} arrayIndex={i} id={meal["id"]} name={meal["name"]}  
+                                        data={meal["data"]} quantity={meal["quantity"]} callback={moreMealInfo} mode={4}> 
+                                    </MealCard>
+                                )
+                            })
+                        }
                     {
                         foods.map((food: any, i: number) => {
                             return (
@@ -501,7 +648,6 @@ export default function MealInfo({ navigation, route }: any) {
                 (page === 2) &&
                 (
                     <View style={viewStyles.middle}>
-                        <MealServingInput multiplier={multiplier} newServingQuantity={newServingQuantity}></MealServingInput>
                         <View style={viewStyles.nutrition}>
                             <NutritionTable nutrition={macros} isMealView={true} multiplier={multiplier}></NutritionTable>
                         </View>
@@ -512,15 +658,24 @@ export default function MealInfo({ navigation, route }: any) {
                 (page === 3) && 
                 (
                     <View style={viewStyles.pieChart}>
-                        <Pie nutrition={macros} multiplier={multiplier}></Pie>
+                        <Bar nutrition={macros}></Bar>
+                        {/* <Pie nutrition={macros} multiplier={multiplier}></Pie> */}
                     </View>
                 )
             }
-            {
+            {  
                 (page === 4) &&
                 (
+                    <View style={viewStyles.pieChart}>
+                        <Pie nutrition={macros} multiplier={multiplier}></Pie>
+                    </View>
+                )
+
+            }
+            {
+                (page === 5) &&
+                (
                     <View style={viewStyles.middle}>
-                        <MealServingInput multiplier={multiplier} newServingQuantity={newServingQuantity}></MealServingInput>
                         <View style={viewStyles.nutrition}>
                             <NutritionTable nutrition={micros} isMealView={true} multiplier={multiplier}></NutritionTable>
                         </View>
@@ -528,17 +683,15 @@ export default function MealInfo({ navigation, route }: any) {
                 )
             }
             {
-                (page === 5) &&
+                (page === 6) &&
                 (
                     <View style={viewStyles.middle}>
-                        <MealServingInput multiplier={multiplier} newServingQuantity={newServingQuantity}></MealServingInput>
                         <View style={viewStyles.nutrition}>
                             <NutritionTable nutrition={other} isMealView={true} multiplier={multiplier}></NutritionTable>
                         </View>
                     </View>
                 )
             }
-
 
             <View style={viewStyles.lower}>      
                 <Button children={"Prev"} textColor="#2774AE" labelStyle={textStyles.button} style={buttonStyles.leftButton} onPress={()=> prevPage()} disabled={(page<2)}></Button>
@@ -550,7 +703,7 @@ export default function MealInfo({ navigation, route }: any) {
             <Portal.Host>
                 <FoodModal 
                     nutrition={viewedFoodNutrition} name={viewedFoodName} id={viewedFoodId} multiplier={viewedFoodMultiplier} servingSize={viewedFoodServings} unit={viewedFoodUnit}
-                    brand={viewedFoodBrand} toggle={toggleFoodModal} removeFromMeal={editMealFoods} editMealFoods={editMealFoods} context={"MealInfo"} modalVisible={foodModalVisible}
+                    brand={viewedFoodBrand} toggle={toggleFoodModal} removeFromMeal={editPlanFoods} editMealFoods={editPlanFoods} context={"MealInfo"} modalVisible={foodModalVisible}
                 ></FoodModal>
             </Portal.Host>
 
@@ -586,7 +739,7 @@ const viewStyles = StyleSheet.create({
         borderColor: '#dadfe1'
     },
     scroll: {
-        height: '85%'
+        height: '100%'
     },
     textInput: {
         height: '10%',
@@ -610,7 +763,7 @@ const viewStyles = StyleSheet.create({
         alignItems: 'center'
     },
     nutrition: {
-        height: '90%',
+        height: '100%',
         padding: 7.5,
         overflow: 'hidden'
     },

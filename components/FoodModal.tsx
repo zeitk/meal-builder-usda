@@ -189,14 +189,16 @@ export default function FoodModal(props: any) {
         if (props.context==="Quicklist") toggleModal()
     }
 
-    function removeFromMeal() {   
+    function removeFromCart() {   
         props.removeFromMeal(props)
-        Alert.alert("Removed", displayString()+" has been removed from the current meal")
+        const loc = props.context === "MealBuilder" ? "meal" : "plan"
+        Alert.alert("Removed", displayString()+" has been removed from the current "+loc)
     }
 
-    function addToMeal() {
+    function addToCart() {
         props.editMealFoods(multiplier, props);
-        Alert.alert("Added", displayString()+" has been added to the current meal")
+        const loc = props.context === "MealBuilder" ? "meal" : "plan"
+        Alert.alert("Added", displayString()+" has been added to the current "+loc)
     }
 
     function displayString() {
@@ -295,17 +297,23 @@ export default function FoodModal(props: any) {
                             <Button textColor="#2774AE" children="Add to Quicklist" onPress={addToQuicklist} labelStyle={styles.buttonText} disabled={Object.keys(props.nutrition).length === 0}></Button>
                         }
                         { (props.context==="MealInfo") &&
-                            <Button textColor="#c5050c" children="Remove from Meal" onPress={removeFromMeal} labelStyle={styles.buttonText}></Button>
+                            <Button textColor="#c5050c" children="Remove from Meal" onPress={removeFromCart} labelStyle={styles.buttonText}></Button>
                         }
                         { (props.context==="Quicklist") &&
                             <Button textColor="#c5050c" children="Remove from Quicklist" onPress={removeFromQuicklist} labelStyle={styles.buttonText}></Button>
                         } 
                         { (props.context==="MealBuilder" && !props.isInMeal) &&
-                            <Button textColor="#2774AE" children="Add to Meal" onPress={addToMeal} labelStyle={styles.buttonText} disabled={Object.keys(props.nutrition).length === 0}></Button>
+                            <Button textColor="#2774AE" children="Add to Meal" onPress={addToCart} labelStyle={styles.buttonText} disabled={Object.keys(props.nutrition).length === 0}></Button>
                         } 
                         { (props.context==="MealBuilder" && props.isInMeal) &&
-                            <Button textColor="#c5050c" children="Remove from Meal" onPress={removeFromMeal} labelStyle={styles.buttonText}></Button>
-                        }               
+                            <Button textColor="#c5050c" children="Remove from Meal" onPress={removeFromCart} labelStyle={styles.buttonText}></Button>
+                        }      
+                        { (props.context==="PlanBuilder" && !props.isInPlan) &&
+                            <Button textColor="#2774AE" children="Add to Plan" onPress={addToCart} labelStyle={styles.buttonText} disabled={Object.keys(props.nutrition).length === 0}></Button>
+                        } 
+                        { (props.context==="PlanBuilder" && props.isInPlan) &&
+                            <Button textColor="#c5050c" children="Remove from Plan" onPress={removeFromCart} labelStyle={styles.buttonText}></Button>
+                        }              
                         </View>
                         <View style={styles.closeButton}>
                             <Button textColor='#c5050c'  children="Close" onPress={toggleModal} labelStyle={styles.buttonText}></Button>

@@ -8,9 +8,10 @@ import CurrentMealContext from '../../context/CurrentMeal';
 import { useMealList }  from '../../context/MealList';
 import QuicklistContext from '../../context/QuicklistContext';
 import FoodCard from '../FoodCard';
-import { IMeal } from '../../interfaces/Interfaces'
+import { IFood, IMeal, IPlan } from '../../interfaces/Interfaces'
 import SearchDrawer from '../../navigation/SearchDrawer';
 import ButtonsContext from '../../context/ButtonsContext';
+import { usePlanList } from '../../context/PlanList';
 
 export default function MealBuilder({ navigation, route }: any) {
 
@@ -18,14 +19,16 @@ export default function MealBuilder({ navigation, route }: any) {
     const [quicklist] = useContext(QuicklistContext);
     const [currentMeal, setCurrentMeal] = useState<IMeal>({ id: 0, name: "", foods: [], data: {}});
     const { mealList, setMealList } = useMealList();
+    const { planList, setPlanList } = usePlanList();
     const [page, setPage] = useState<number>(1);
     const [hideButtons, setHideButtons] = useState<boolean>(false);
     const [inEditMode, setInEditMode] = useState<boolean>(false);
+    const [fromPlan, setFromPlan] = useState<boolean>(false);
     
     useEffect(() =>{
         setPage(1);
         setHideButtons(false);
-        route.params === undefined ? newMeal() : existingMeal(route.params.meal);
+        route.params === undefined ? newMeal() : existingMeal(route.params);
     },[])
 
     function newMeal() {
@@ -41,18 +44,25 @@ export default function MealBuilder({ navigation, route }: any) {
         })
     }
 
-    function existingMeal(meal: any) {
+    function existingMeal(params: any) {
+
+        let meal: IMeal;
+        if (params.plan !== undefined && planList !== null) {
+            const plan = planList[params.plan]
+            meal = plan["meals"][params.meal]
+            setFromPlan(true)
+        }
+
+        else {
+            meal = route.params.meal
+        }
+
         // should never happen, sanity check
         if (meal===undefined) navigation.goBack();
         // load in current meal, and place in search mode
-        setCurrentMeal({
-            id: meal["id"],
-            name: meal["name"],
-            foods: meal["foods"],
-            data: meal["data"]
-        })
+        setCurrentMeal(meal)
         setInEditMode(true);
-        setPage(2);
+        //setPage(2);
     }
 
     function changePage() {
@@ -432,17 +442,45 @@ export default function MealBuilder({ navigation, route }: any) {
             }
 
             const newMeal = saveMealData()
+
+            // if from PlanInfo, return there with the updated meal
+            if (fromPlan) {
+                //replaceMeal(newMeal)
+                navigation.navigate({
+                    name: 'PlanInfo',
+                    params: {
+                        meal: newMeal
+                    },
+                    merge: true
+                })
+                return
+            }
+
             if (!mealList) {
                 console.error("Error 3", "Meal list null while saving in Mealbuilder.tsx")
                 return 
             }
-            const updatedMealList = [
-                ...mealList,
-                newMeal
-            ]
-            saveMealList(updatedMealList)
-            setMealList(updatedMealList)
-            
+
+            if (inEditMode) {
+                const updatedMealList = mealList.map((meal: IMeal) => {
+                    if (meal["id"] === currentMeal["id"]) {
+                        return newMeal
+                    }
+                    return meal
+                })
+                saveMealList(updatedMealList)
+                setMealList(updatedMealList)
+            }
+
+            else  {
+                const updatedMealList = [
+                    ...mealList,
+                    newMeal
+                ]
+                saveMealList(updatedMealList)
+                setMealList(updatedMealList)
+            }
+
             //close modal
             navigation.goBack()
         }  
@@ -464,6 +502,30 @@ export default function MealBuilder({ navigation, route }: any) {
             navigation.goBack()
         }
     }
+
+    function replaceMeal(newMeal: IMeal) {
+
+        const planIndex = route.params.plan
+        if (planIndex === undefined) return
+
+        const updatedPlanMeals = planList![planIndex]["meals"].map((meal: IMeal) => {
+            if (meal["id"] === newMeal["id"]) {
+                return newMeal
+            }
+            else return meal
+        })
+        const updatedPlanList = planList!.map((plan: IPlan, index: number) => {
+            if (index === planIndex) {
+                return({
+                    ...plan,
+                    meals: updatedPlanMeals
+                })
+            }
+            else return plan
+        })
+        setPlanList(updatedPlanList)
+    }
+
     
     function newMealName(newName: any) {
 
@@ -471,7 +533,7 @@ export default function MealBuilder({ navigation, route }: any) {
         if (typeof newName==="string") {
             // don't allow blank name
             if (newName==="") return
-
+            console.log(newName)
             setCurrentMeal({
                 ...currentMeal,
                 name: newName
@@ -479,8 +541,19 @@ export default function MealBuilder({ navigation, route }: any) {
         }
     }
 
-    function toggleButtons() {
-        (hideButtons) ? setHideButtons(false) : setHideButtons(true)
+    function isInMeal(id: any) {
+        for (const food of currentMeal["foods"]) {
+            if (food["id"] === id)  {
+                return(true)
+            }
+        }
+        return(false)
+    }
+
+    function foodQuantity(id: any) {
+        for (const food of currentMeal["foods"]) {
+            if (food["id"] === id)  return((food["multiplier"] * food["quantity"]).toFixed(1))
+        }
     }
 
     return (
@@ -499,7 +572,7 @@ export default function MealBuilder({ navigation, route }: any) {
                                 placeholderTextColor="#adadad"
                                 style={textStyles.textInput} 
                                 returnKeyType="done"  
-                                placeholder={"New Meal"}
+                                placeholder={currentMeal["name"]}
                                 textAlign="center"
                                 onEndEditing={(value) => newMealName(value.nativeEvent.text) }
                                 onSubmitEditing={(value) => newMealName(value.nativeEvent.text) }>
@@ -514,9 +587,11 @@ export default function MealBuilder({ navigation, route }: any) {
                             </View> 
                             {
                                 quicklist.map((food: any, i: number) => {
+                                    const inMeal = isInMeal(food.id)
+                                    const servingSize = inMeal ? foodQuantity(food.id) : food.servingSize
                                     return (
-                                        <FoodCard key={i} arrayIndex={i} id={food.id} name={food.name} brand={food.brand}
-                                            nutrients={food.nutrition} servingSize={food.servingSize} unit={food.unit} callback={editMeal} mode={1}>
+                                        <FoodCard key={i} arrayIndex={i} id={food.id} name={food.name} brand={food.brand} pressed={inMeal}
+                                            nutrients={food.nutrition} servingSize={servingSize} unit={food.unit} callback={editMeal} mode={1}>
                                         </FoodCard>
                                     )
                                 })
@@ -538,34 +613,25 @@ export default function MealBuilder({ navigation, route }: any) {
                 </View>
                 :
                 // page 2 is entirely composed of the Search feature
-                <View style={inEditMode ? viewStyles.editScroll:viewStyles.inputScroll}>
+                <View style={viewStyles.inputScroll}>
                     <View style={viewStyles.overall}>
                             <SearchDrawer name="Meals"></SearchDrawer>
                     </View>
                 </View>
                 }
                 {/* Buttons on the bottom of screen */}
-                { (inEditMode) 
-                    ?
-                    <View style={buttonStyles.editBottomButtonsView}>
+                <View style={buttonStyles.bottomButtonsView}>
+                    <View style={buttonStyles.changeSearchButtonView}>
+                        <Button disabled={hideButtons} children={(page===1) ? "Search all foods":"Quicklist"} textColor="#2774AE" labelStyle={textStyles.buttons} style={buttonStyles.singleButton} onPress={changePage}></Button>
+                    </View>
+                    <View style={buttonStyles.closeButtonsView}>
                         <View style={buttonStyles.closeSaveButtons}>
                             <Button disabled={hideButtons} children="Close" textColor="#c5050c" labelStyle={textStyles.buttons} style={buttonStyles.twinButtons} onPress={()=> closeModal(1)}></Button>
-                            <Button disabled={hideButtons} children="Save Meal" textColor="#22a811" labelStyle={textStyles.buttons} style={buttonStyles.twinButtons} onPress={()=> closeModal(3)}></Button>
+                            <Button disabled={hideButtons} children="Save Meal" textColor="#22a811" labelStyle={textStyles.buttons} style={buttonStyles.twinButtons} onPress={()=> closeModal(2)}></Button>
                         </View>
                     </View>
-                    :
-                    <View style={buttonStyles.bottomButtonsView}>
-                        <View style={buttonStyles.changeSearchButtonView}>
-                            <Button disabled={hideButtons} children={(page===1) ? "Search all foods":"Quicklist"} textColor="#2774AE" labelStyle={textStyles.buttons} style={buttonStyles.singleButton} onPress={changePage}></Button>
-                        </View>
-                        <View style={buttonStyles.closeButtonsView}>
-                            <View style={buttonStyles.closeSaveButtons}>
-                                <Button disabled={hideButtons} children="Close" textColor="#c5050c" labelStyle={textStyles.buttons} style={buttonStyles.twinButtons} onPress={()=> closeModal(1)}></Button>
-                                <Button disabled={hideButtons} children="Save Meal" textColor="#22a811" labelStyle={textStyles.buttons} style={buttonStyles.twinButtons} onPress={()=> closeModal(2)}></Button>
-                            </View>
-                        </View>
-                    </View>
-                }
+                </View>
+                
             </View>
         </View>     
 

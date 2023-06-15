@@ -1,22 +1,27 @@
 import React from 'react'
 
-import { PieChart } from "react-native-chart-kit";
+import { BarChart } from "react-native-chart-kit";
 import { Dimensions, Text } from "react-native";
 
 const screenWidth = Dimensions.get("window").width;
 
 const chartConfig = {
-    backgroundGradientFrom: "#1E2923",
+    backgroundGradientFrom: "#f7f7f7",
     backgroundGradientFromOpacity: 0,
-    backgroundGradientTo: "#08130D",
-    backgroundGradientToOpacity: 0.5,
-    color: (opacity = 1) => `rgba(26, 255, 146, ${opacity})`,
-    strokeWidth: 2, // optional, default 3
-    barPercentage: 0.5,
+    backgroundGradientTo: "#f7f7f7",
+    backgroundGradientToOpacity: 0,
+    color: (opacity = 1) => `black`,
+    strokeWidth: 3, // optional, default 3W
+    barPercentage: 1.5,
     useShadowColorFromDataset: false, // optional,
+    propsForBackgroundLines: {
+        x1: screenWidth * 0.175,
+        x2: screenWidth * 0.91
+    }
 };
 
-export default function Pie(props: any) {
+export default function Bar(props: any) {
+
 
     const nutrition = props.nutrition;
     const multiplier = (props.multiplier === undefined) ? 1 : props.multiplier
@@ -47,17 +52,17 @@ export default function Pie(props: any) {
 
         else if (!fatFound && (nutrient["nutrientName"].includes("Total lipid") || nutrient["nutrientName"].includes("Total fat"))) {
             fatFound = true
-            fats = nutrient["value"] * 9
+            fats = Math.round(nutrient["value"] * 9)
         }
 
         else if (!carbsFound && nutrient["nutrientName"].includes("Carbohydrate")) {
             carbsFound = true
-            carbs = nutrient["value"] * 4
+            carbs = Math.round(nutrient["value"] * 4)
         }
 
         else if (!proteinFound && nutrient["nutrientName"].includes("Protein")) {
             proteinFound = true
-            protein = nutrient["value"] * 4
+            protein = Math.round(nutrient["value"] * 4)
         }
     }
 
@@ -65,45 +70,34 @@ export default function Pie(props: any) {
         cals = Math.round(( fats * 9 + carbs * 4 + protein * 4 ) * multiplier)
     }
 
-    const data = [
-        {
-            name: "Fats",
-            population: fats,                
-            color: "#F00",
-            legendFontColor: "#7F7F7F",
-            legendFontSize: 15
-        },
-        {                
-            name: "Carbs",
-            population: carbs,                
-            color: "rgba(131, 167, 234, 1)",
-            legendFontColor: "#7F7F7F",
-            legendFontSize: 15
-        },
-        {
-            name: "Protein",
-            population: protein,                
-            color: "rgb(0, 0, 255)",
-            legendFontColor: "#7F7F7F",
-            legendFontSize: 15,
-        }
-    ]
+    const data = {
+        labels: ["Fats", "Carbs", "Protein"],
+        datasets: [
+            {
+            data: [fats, carbs, protein]
+            }
+        ]
+    };
+
 
     return(
        <>
-        <Text style={{paddingBottom: 70, fontSize: 18, fontWeight: '400'}}>Caloric Breakdown</Text>
-        <PieChart
+        {/* <Text style={{paddingBottom: 30, fontSize: 18, fontWeight: '400'}}>Caloric Breakdown</Text> */}
+        <BarChart
             data={data}
-            width={screenWidth}
-            height={225}
+            yAxisSuffix=' g'
+            width={screenWidth * 0.95}
+            height={400}
+            yAxisLabel=""
+            yLabelsOffset={5}
             chartConfig={chartConfig}
-            accessor={"population"}
-            backgroundColor={"transparent"}
-            paddingLeft={"25"}
-            center={[0, 0]}
-            absolute={false}
-            />
-        <Text style={{paddingTop: 83, fontSize: 15, fontWeight: '400'}}>Total Calories: {cals}</Text>
+            verticalLabelRotation={0}
+            showValuesOnTopOfBars={true}
+            fromZero={true}
+            withHorizontalLabels={true}
+            withInnerLines={true}
+        />
+        <Text style={{fontSize: 15, fontWeight: '400'}}>Total Calories: {cals}</Text>
        </>
     )
 }

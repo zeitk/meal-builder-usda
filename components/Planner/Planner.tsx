@@ -2,33 +2,33 @@ import React from 'react'
 
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button } from 'react-native-paper';
-import { useMealList } from '../../context/MealList';
-import MealCard from './MealCard';
+import { usePlanList } from '../../context/PlanList';
+import PlanCard from './PlanCard';
 
-export default function Meals({ navigation }: any) {
+export default function Planner({ navigation }: any) {
 
-    const { mealList } = useMealList();
+    const { planList } = usePlanList()
 
     return<>
         <SafeAreaView style={styles.safeView}>
             <View style={styles.uppperView}>
 
-            { (mealList !== null && mealList.length>0) ?
+            { (planList !== null && planList.length>0) ?
                 <ScrollView style={styles.scrollView}>
-                    {
-                        mealList.map((meal: any, i: number) => {
-                            return<MealCard key={i} id={meal["id"]} name={meal["name"]} foods={meal["foods"]} data={meal["data"]} navigation={navigation} mode={1}></MealCard>
+                    { 
+                        planList.map((plan: any, i: number) => {
+                            return<PlanCard key={i} id={plan["id"]} name={plan["name"]} foods={plan["foods"]} data={plan["data"]} navigation={navigation}></PlanCard>
                         })
                     }
                 </ScrollView>
                 :
-                <View style={styles.noMealsBannerView}>
-                    <Text style={styles.noMealsBannerText}>No saved meals</Text>
+                <View style={styles.noPlansBannerView}>
+                    <Text style={styles.noPlansBannerText}>No saved plans</Text>
                 </View>
             }
             </View>
             <View style={styles.buttonView}>
-                    <Button mode="text" children="Add Meal" textColor="#2774AE" contentStyle={{height: 50}} labelStyle={styles.buttonText} style={styles.button} onPress={()=>{ navigation.navigate('MealBuilder')}}></Button>
+                    <Button mode="text" children="Add Plan" textColor="#2774AE" contentStyle={{height:50}}  labelStyle={styles.buttonText} style={styles.button} onPress={()=>{ navigation.navigate('PlanBuilder')}}></Button>
             </View>
         </SafeAreaView>
     </>
@@ -63,13 +63,13 @@ const styles = StyleSheet.create({
         borderColor: '#dadfe1',
         borderTopWidth: 1,
     },
-    noMealsBannerView: {
+    noPlansBannerView: {
         height: '100%',
         backgroundColor:'white',
         justifyContent: 'center',
         alignItems: 'center'
     },
-    noMealsBannerText: {
+    noPlansBannerText: {
         fontSize: 17,
         fontWeight: '300'
     }

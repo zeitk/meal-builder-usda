@@ -2,7 +2,8 @@ export interface IMeal {
     id: number
     name: string,
     foods: IFood[],
-    data: any
+    data: any,
+    quantity?: number
 }
 
 export interface IMealContext {
@@ -13,6 +14,24 @@ export interface IMealContext {
 export interface IMealListContext {
     mealList: IMeal[] | null,
     setMealList: (Meals: IMeal[]) => void
+}
+
+export interface IPlan {
+    id: number
+    name: string,
+    foods: IFood[],
+    meals: IMeal[],
+    data: any
+}
+
+export interface IPlanContext {
+    currentPlan: IPlan | null,
+    setCurrentPlan: (Plan: IPlan) => void
+}
+
+export interface IPlanListContext {
+    planList: IPlan[] | null,
+    setPlanList: (Plans: IPlan[]) => void
 }
 
 export interface IFood {

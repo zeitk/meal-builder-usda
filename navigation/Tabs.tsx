@@ -8,10 +8,13 @@ import { useState, useEffect } from 'react';
 import QuicklistContext from '../context/QuicklistContext';
 import { MealListContext } from '../context/MealList';
 import MealStack from './MealStack';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { IMeal, ISearchCriteria } from '../interfaces/Interfaces';
+import { IMeal, IPlan, ISearchCriteria } from '../interfaces/Interfaces';
 import SearchDrawer from './SearchDrawer';
 import { CriteriaContext } from '../context/CriteriaContext';
+import PlannerStack from './PlannerStack';
+import { PlanListContext } from '../context/PlanList';
 
 const TabNavigator = createBottomTabNavigator();
 
@@ -19,12 +22,14 @@ export default function Tabs() {
     
     const [quicklist, setQuicklist] = useState<any[]>([])
     const [mealList, setMealList] = useState<IMeal[]>([])
+    const [planList, setPlanList] = useState<IPlan[]>([])
     const [searchCriteria, setSearchCriteria] = useState<ISearchCriteria>({dataType: "", pageSize: ""})
 
     useEffect(() => {
         //clearMemory();
         getQuicklist();
         getMealList(); 
+        getPlanList();
         getSearchCriteria();
     }, [])
 
@@ -63,6 +68,19 @@ export default function Tabs() {
         }
     }
 
+    // grab the user's plan list if it exists
+    async function getPlanList() {
+        try {
+            const priorPlanList = await AsyncStorage.getItem("@planlist")
+            if (priorPlanList !== null) {
+                setPlanList(JSON.parse(priorPlanList))
+            }
+        }
+        catch(e) {
+            console.error("Error 2", "Error retrieving plans in Tabs.tsx") 
+        }
+    }
+
     async function getSearchCriteria() {
         try {
             const priorCriteria = await AsyncStorage.getItem("@search") 
@@ -82,30 +100,37 @@ export default function Tabs() {
     }
 
     return<>
+        <PlanListContext.Provider value={{planList,setPlanList}}>
         <MealListContext.Provider value={{mealList,setMealList}}>
         <QuicklistContext.Provider value={[quicklist,setQuicklist]}>
         <CriteriaContext.Provider value={{searchCriteria,setSearchCriteria}}>
 
         <TabNavigator.Navigator>
+        <TabNavigator.Screen name="Quicklist" component={Quicklist} options={{tabBarIcon() {
+                return<>
+                    <Feather name="list" size={24} color="black" />
+                </>
+                }}}></TabNavigator.Screen>
             <TabNavigator.Screen name="SearchDrawer" component={SearchDrawer} initialParams={{name:"Tabs"}} options={{headerShown: true, title:'Search', tabBarIcon() {
                 return<> 
                     <Feather name="search" size={20} color="black"> </Feather>
-                </>
-                },}}></TabNavigator.Screen>
-            <TabNavigator.Screen name="Quicklist" component={Quicklist} options={{tabBarIcon() {
-                return<>
-                    <Feather name="list" size={24} color="black" />
                 </>
                 }}}></TabNavigator.Screen>
             <TabNavigator.Screen name="Meals" component={MealStack} options={{headerShown: true, tabBarIcon() {
                 return<>
                     <MaterialCommunityIcons name="silverware" size={20} color="black"></MaterialCommunityIcons>
                 </>
-                },}}></TabNavigator.Screen>
+                }}}></TabNavigator.Screen>
+            <TabNavigator.Screen name="Planner" component={PlannerStack} options={{headerShown: true, tabBarIcon() {
+                return<>
+                    <Feather name="book" size={20} color="black" />
+                </>
+                }}}></TabNavigator.Screen>
         </TabNavigator.Navigator> 
 
         </CriteriaContext.Provider>
         </QuicklistContext.Provider>
         </MealListContext.Provider>
+        </PlanListContext.Provider>
     </>
 }
