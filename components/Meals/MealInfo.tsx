@@ -11,6 +11,7 @@ import FoodModal from "../FoodModal";
 import { IMeal } from "../../interfaces/Interfaces";
 import MealServingInput from "./MealServingInput";
 import Pie from "../Tables/PieChart";
+import Bar from "../Tables/BarChart";
 
 
 export default function MealInfo({ navigation, route }: any) {
@@ -19,9 +20,7 @@ export default function MealInfo({ navigation, route }: any) {
     const [page, setPage] = useState<number>(1);
     const [maxPage, setMaxPage] = useState<number>(3);
     const [multiplier, setMultiplier] = useState<number>(1);
-    const [isNameEditing, setIsNameEditing] = useState<boolean>(false)
     const {mealList, setMealList} = useMealList();
-    const [name, setName] = useState<string>("")
 
     // modal related states
     const [viewedFoodId, setViewedFoodId] = useState<number>()
@@ -58,8 +57,6 @@ export default function MealInfo({ navigation, route }: any) {
         setPage(1)
         getMaxPage()
         setMultiplier(1);
-        setIsNameEditing(false)
-        setName(mealList[mealIndex]["name"])
         setFoodModalVisible(false)
     }, [])
 
@@ -82,7 +79,7 @@ export default function MealInfo({ navigation, route }: any) {
     }
 
     function getMaxPage() {
-        let max = 3;
+        let max = 4;
         if (micros.length > 0) max++;
         if (other.length > 0) max++
         setMaxPage(max);
@@ -512,12 +509,20 @@ export default function MealInfo({ navigation, route }: any) {
                 (page === 3) && 
                 (
                     <View style={viewStyles.pieChart}>
+                        <Bar nutrition={macros} multiplier={multiplier}></Bar>
+                    </View>
+                )
+            }
+            {
+                (page === 4) && 
+                (
+                    <View style={viewStyles.pieChart}>
                         <Pie nutrition={macros} multiplier={multiplier}></Pie>
                     </View>
                 )
             }
             {
-                (page === 4) &&
+                (page === 5) &&
                 (
                     <View style={viewStyles.middle}>
                         <MealServingInput multiplier={multiplier} newServingQuantity={newServingQuantity}></MealServingInput>
@@ -528,7 +533,7 @@ export default function MealInfo({ navigation, route }: any) {
                 )
             }
             {
-                (page === 5) &&
+                (page === 6) &&
                 (
                     <View style={viewStyles.middle}>
                         <MealServingInput multiplier={multiplier} newServingQuantity={newServingQuantity}></MealServingInput>

@@ -8,6 +8,7 @@ import FoodCard from "./FoodCard";
 import FoodModal from "./FoodModal";
 import { SearchBar } from './SearchBar';
 import { useCriteria } from '../context/CriteriaContext';
+import { IFood } from '../interfaces/Interfaces';
 
 const examples: string[] = [
     "Potato",
@@ -29,6 +30,7 @@ export default function Search(props : any) {
     const [errorBanner, setErrorBanner] = useState<string>("")
     const [nutrition, setNutrition] = useState<any>({})
     const [modalVisible, setModalVisible] = useState<boolean>(false);
+    const [currentCategory, setCurrentCategory] = useState<IFood>({name: "", id: 0, foodCategory: "", nutrients: {}});
     const [currentId, setCurrentId] = useState<string>("");
     const [currentName, setCurrentName] = useState<string>("");
     const [currentUnit, setCurrentUnit] =  useState<string>("");
@@ -146,6 +148,7 @@ export default function Search(props : any) {
                     setCurrentUnit("g")
                     setCurrentBrand("Unbranded")
                 }
+                setCurrentCategory(item["foodCategory"]);
             }
         };
         setCurrentName(name);
@@ -182,7 +185,7 @@ export default function Search(props : any) {
                                         <Text style={styles.foodCateogoryText}>{item["foodCategory"]}</Text>
                                     </View>
                                     <FoodCard id={item.fdcId} name={item.description} nutrients={item.foodNutrients} 
-                                        brand={brand} callback={moreInfo} mode={0}>
+                                        brand={brand} callback={moreInfo} food={item} mode={0}>
                                     </FoodCard>
                                 </View>
                             )
@@ -191,14 +194,14 @@ export default function Search(props : any) {
                             <FoodCard key={i} id={item.fdcId} name={item.description} nutrients={item.foodNutrients} 
                                 brand={brand} callback={moreInfo} mode={0}>
                             </FoodCard>
-                            )
+                        )
                     })
                 }
             </ScrollView>
 
             <Portal.Host>
                 <FoodModal nutrition={nutrition} name={currentName} id={currentId} toggle={toggleModal} modalVisible={modalVisible} 
-                servingSize={currentServing} brand={currentBrand} unit={currentUnit} context={"Search"}>
+                servingSize={currentServing} brand={currentBrand} unit={currentUnit} category={currentCategory} context={"Search"}>
                 </FoodModal>
             </Portal.Host>
 

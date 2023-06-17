@@ -12,6 +12,7 @@ import ServingSizeTable from "./Tables/ServingSizeTable";
 import HeadersContext from '../context/DataHeaders';
 import FoodCardHead from './FoodCardHead';
 import Pie from './Tables/PieChart';
+import Bar from './Tables/BarChart';
 
 export default function FoodModal(props: any) {
 
@@ -120,7 +121,7 @@ export default function FoodModal(props: any) {
         if (trace.length > 0) max++;
         if (other.length > 0) max++;
 
-        setMaxPage(max + 1);
+        setMaxPage(max + 2);
         setMacros(core);
         setMicros(trace)
         setOther(other);
@@ -157,6 +158,7 @@ export default function FoodModal(props: any) {
         foodObject["servingSize"] = props.servingSize;
         foodObject["unit"] = props.unit;
         foodObject["brand"] = props.brand;
+        foodObject["foodCategory"] = props.category;
 
         // don't store the same item twice
         quicklist.forEach((foodItem: any) => {
@@ -254,17 +256,26 @@ export default function FoodModal(props: any) {
                             </View>
                         ) 
                     }
-                                        { 
+                    {
                         (page === 2) &&
                         (
                             <View style={styles.pieChartView}>
-                                <Pie nutrition={macros} multiplier={multiplier}></Pie>
+                                <Bar nutrition={macros} multiplier={multiplier} context={"food"}></Bar>
+                            </View>
+
+                        )
+                    }
+                    { 
+                        (page === 3) &&
+                        (
+                            <View style={styles.pieChartView}>
+                                <Pie nutrition={macros} multiplier={multiplier} context={"food"}></Pie>
                             </View>
 
                         )
                     }
                     {
-                        (page === 3 && micros.length > 0) &&
+                        (page === 4 && micros.length > 0) &&
                         (
                             <View style={styles.nutritionView}>
                                 <NutritionTable headers={headers} nutrition={micros} multiplier={multiplier}></NutritionTable>
@@ -272,7 +283,7 @@ export default function FoodModal(props: any) {
                         )
                     }
                     {
-                        (page === 4 && other.length > 0) &&
+                        (page === 5 && other.length > 0) &&
                         (
                             <View style={styles.nutritionView}>
                                 <NutritionTable headers={headers} nutrition={other} multiplier={multiplier}></NutritionTable>
@@ -281,11 +292,11 @@ export default function FoodModal(props: any) {
                     }
 
                     <View style={styles.pageButtonsView}>
-                        <Button textColor="#2774AE" children="Prev" onPress={prevPage} disabled={page===1} labelStyle={styles.pageButtonText}></Button>
+                        <Button textColor="#2774AE" children="Prev" onPress={prevPage} disabled={page===1} style={styles.pageButtons} labelStyle={styles.pageButtonText}></Button>
                         <View style={styles.pageText}>
                             <Text style={styles.text}>{page} of {maxPage}</Text>
                         </View>
-                        <Button textColor="#2774AE" children="Next" onPress={nextPage} disabled={page===maxPage} labelStyle={styles.pageButtonText}></Button>
+                        <Button textColor="#2774AE" children="Next" onPress={nextPage} disabled={page===maxPage} style={styles.pageButtons}  labelStyle={styles.pageButtonText}></Button>
                     </View>
 
                     <View style={styles.bottomButtonsView}>
@@ -429,6 +440,12 @@ const styles = StyleSheet.create({
         lineHeight: 38
     },
     pageText: {
-        width: 40
+        width: 40,
+        marginHorizontal: 7.5
+    },
+
+    // button styles
+    pageButtons: {
+        width: 125
     }
 })

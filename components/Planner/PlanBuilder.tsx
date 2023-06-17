@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Alert, ScrollView, TextInput } from 'react-native';
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "react-native-paper";
@@ -26,6 +26,8 @@ export default function PlanBuilder({ navigation, route }: any) {
     const [page, setPage] = useState<number>(1);
     const [hideButtons, setHideButtons] = useState<boolean>(false);
     const [inEditMode, setInEditMode] = useState<boolean>(false);
+    const [isNameEditing, setIsNameEditing] = useState<boolean>(false);
+    const ref = useRef<any>(null)
     
     useEffect(() =>{
         setPage(1);
@@ -608,15 +610,25 @@ export default function PlanBuilder({ navigation, route }: any) {
                 ...currentPlan,
                 name: newName
             })
+            setIsNameEditing(false)
         }
     }
 
-    function isMealInPlan(id: any, foods: IFood[]) {
+    async function editName() {
+        if (isNameEditing) setIsNameEditing(false)
+        else {
+            // async to allow input to appear before we give it focus
+            let x = await setIsNameEditing(true)
+            ref.current?.focus();
+        }
+    }
+
+    function isMealInPlan(curMeal: IMeal) {
         for (const meal of currentPlan["meals"]) {
             // not perfect, but should be good enough
-            if (meal["id"] === id) {
-                if (foods[0].id === meal["foods"][0].id) return(true)
-            }
+            if (meal["id"] === curMeal["id"] && 
+                meal["name"] === curMeal["name"] && 
+                meal["foods"][0].id === curMeal["foods"][0].id) return(true)
         }
         return(false)
     }
@@ -656,7 +668,7 @@ export default function PlanBuilder({ navigation, route }: any) {
         );
     }
 
-    function removeMeal(id: any) {
+    function removeMeal(id: any, name: any) {
         Alert.alert(
             'Remove',
             'Remove from plan?',[
@@ -664,7 +676,9 @@ export default function PlanBuilder({ navigation, route }: any) {
                 { text: 'Yes', onPress: () => { 
                     setCurrentPlan({
                         ...currentPlan,
-                        meals: currentPlan["meals"].filter((item:any) => item["id"] !== id)
+                        meals: currentPlan["meals"].filter((item:any) => 
+                            item["id"] !== id || item["name"] !== name
+                        )
                     });
                 }},
             ],
@@ -681,32 +695,28 @@ export default function PlanBuilder({ navigation, route }: any) {
             <View style={viewStyles.overall}>
                 { (page !== 4) &&
                     <View style={viewStyles.textInput}>
-                        { (inEditMode)
-                            ?
-                            <TextInput 
-                                selectionColor="#f7f7f7" 
-                                placeholderTextColor="#adadad"
-                                style={textStyles.textInput} 
-                                returnKeyType="done"  
+                    { (isNameEditing) ?
+                        <View style={viewStyles.planNameView}>
+                            <TextInput
+                                ref={ref}
+                                style={textStyles.planNameTextInput}
                                 placeholder={currentPlan["name"]}
-                                textAlign="center"
-                                onEndEditing={(value) => newPlanName(value.nativeEvent.text) }
-                                onSubmitEditing={(value) => newPlanName(value.nativeEvent.text) }>
-                            </TextInput>
-                            :
-                            <TextInput 
-                                selectionColor="#f7f7f7" 
                                 placeholderTextColor="#adadad"
-                                style={textStyles.textInput} 
-                                returnKeyType="done"  
-                                placeholder={"New Plan"}
+                                returnKeyType="done" 
                                 textAlign="center"
+                                maxLength={20}
                                 onEndEditing={(value) => newPlanName(value.nativeEvent.text) }
-                                onSubmitEditing={(value) => newPlanName(value.nativeEvent.text) }>
-                            </TextInput>
-                        }
+                                onSubmitEditing={(value) => newPlanName(value.nativeEvent.text) } 
+                            ></TextInput>
+                            <Button children="Cancel" textColor="#c5050c" onPress={editName} labelStyle={textStyles.editButton} style={buttonStyles.nameEditButton}></Button>
+                        </View>
+                        :
+                        <View style={viewStyles.planNameView}>
+                            <Text numberOfLines={1} style={textStyles.planName}>{currentPlan["name"]}</Text>
+                            <Button children="Edit Name" textColor="#282728" onPress={editName} labelStyle={textStyles.editButton} style={buttonStyles.nameEditButton}></Button>
+                        </View>
+                    }
                     </View>
-
                 }
                 { (page===1) &&   
                 // page 1 encompasses Meal Name selection and Quicklist
@@ -756,7 +766,7 @@ export default function PlanBuilder({ navigation, route }: any) {
                             </View> 
                             {
                                 mealList.map((meal: IMeal, i: number) => {
-                                    const inPlan = isMealInPlan(meal["id"], meal["foods"])
+                                    const inPlan = isMealInPlan(meal)
                                     const quantity = inPlan ? mealQuantity(meal.id) : 1
                                     return (
                                         <MealCard key={i} arrayIndex={i} id={meal["id"]} name={meal["name"]} quantity={quantity}
@@ -798,7 +808,7 @@ export default function PlanBuilder({ navigation, route }: any) {
                 }
                 { (page === 4) &&
                     // page 2 is entirely composed of the Search feature
-                    <View style={inEditMode ? viewStyles.editScroll:viewStyles.editScroll}>
+                    <View style={viewStyles.editScroll}>
                         <View style={viewStyles.overall}>
                             <SearchDrawer name="Meals"></SearchDrawer>
                         </View>
@@ -866,7 +876,6 @@ const viewStyles = StyleSheet.create({
     },
     textInput: {
         height: '8.25%',
-        alignItems: 'center',
         justifyContent: 'center',
     },
     exampleBanner: {
@@ -877,7 +886,12 @@ const viewStyles = StyleSheet.create({
         backgroundColor:'white',
         justifyContent: 'center',
         alignItems: 'center'
-    }
+    },
+    planNameView: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
 })
 
 const textStyles = StyleSheet.create({
@@ -911,6 +925,22 @@ const textStyles = StyleSheet.create({
     title: {
         fontSize: 25,
         fontWeight: '300'
+    },
+    planName: {
+        fontSize: 24,
+        fontWeight: '300',
+        padding: 7.5,
+    },
+    planNameTextInput: {
+        fontSize: 24,
+        fontWeight: '300',
+        width: 200,
+        padding: 7.5,
+        borderWidth: 1,
+        borderColor: '#646569',
+    },
+    editButton: {
+        fontSize: 12
     }
 })
 
@@ -953,6 +983,11 @@ const buttonStyles = StyleSheet.create({
     },
     twinButtons: {
         width: 170
+    },
+    nameEditButton: {
+        position: 'absolute',
+        right: '5%',
+        alignSelf: 'center'
     }
     
 })

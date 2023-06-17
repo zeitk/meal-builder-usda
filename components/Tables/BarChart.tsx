@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { BarChart } from "react-native-chart-kit";
-import { Dimensions, Text } from "react-native";
+import { Dimensions, StyleSheet, Text } from "react-native";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -30,10 +30,13 @@ export default function Bar(props: any) {
     let fatFound: boolean = false;
     let carbsFound: boolean = false;
     let proteinFound: boolean = false;
+    let alcFound: boolean = false;
+
     let cals: number = 0;
     let protein: number = 0;
     let carbs: number = 0;
     let fats: number = 0;
+    let alc: number = 0;
 
     for (const nutrient of nutrition) {
         // break early if we found everything
@@ -52,22 +55,27 @@ export default function Bar(props: any) {
 
         else if (!fatFound && (nutrient["nutrientName"].includes("Total lipid") || nutrient["nutrientName"].includes("Total fat"))) {
             fatFound = true
-            fats = Math.round(nutrient["value"] * 9)
+            fats = Math.round(nutrient["value"] * multiplier)
         }
 
         else if (!carbsFound && nutrient["nutrientName"].includes("Carbohydrate")) {
             carbsFound = true
-            carbs = Math.round(nutrient["value"] * 4)
+            carbs = Math.round(nutrient["value"] * multiplier)
         }
 
         else if (!proteinFound && nutrient["nutrientName"].includes("Protein")) {
             proteinFound = true
-            protein = Math.round(nutrient["value"] * 4)
+            protein = Math.round(nutrient["value"] * multiplier)
+        }
+
+        else if (!alcFound && nutrient["nutrientName"].includes("Alcohol")) {
+            alcFound = true
+            alc = Math.round(nutrient["value"] * multiplier)
         }
     }
 
     if (cals === 0) {
-        cals = Math.round(( fats * 9 + carbs * 4 + protein * 4 ) * multiplier)
+        cals = Math.round(( fats * 9 + carbs * 4 + protein * 4 + alc * 7) * multiplier)
     }
 
     const data = {
@@ -82,12 +90,11 @@ export default function Bar(props: any) {
 
     return(
        <>
-        {/* <Text style={{paddingBottom: 30, fontSize: 18, fontWeight: '400'}}>Caloric Breakdown</Text> */}
         <BarChart
             data={data}
             yAxisSuffix=' g'
             width={screenWidth * 0.95}
-            height={400}
+            height={props.context === "food" ? 300 : 400}
             yAxisLabel=""
             yLabelsOffset={5}
             chartConfig={chartConfig}
@@ -97,7 +104,21 @@ export default function Bar(props: any) {
             withHorizontalLabels={true}
             withInnerLines={true}
         />
-        <Text style={{fontSize: 15, fontWeight: '400'}}>Total Calories: {cals}</Text>
+        <Text style={props.context === "food" ? styles.bottomFood : styles.bottomMeal}>Total Calories: {cals}</Text>
        </>
     )
 }
+
+
+const styles = StyleSheet.create({
+    bottomMeal: {
+        paddingTop: 0, 
+        fontSize: 15, 
+        fontWeight: '400'
+    },
+    bottomFood: {
+        paddingTop: 0, 
+        fontSize: 15, 
+        fontWeight: '400'
+    },
+})

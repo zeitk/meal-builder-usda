@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Alert, ScrollView, TextInput } from 'react-native';
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "react-native-paper";
@@ -8,7 +8,7 @@ import CurrentMealContext from '../../context/CurrentMeal';
 import { useMealList }  from '../../context/MealList';
 import QuicklistContext from '../../context/QuicklistContext';
 import FoodCard from '../FoodCard';
-import { IFood, IMeal, IPlan } from '../../interfaces/Interfaces'
+import { IFood, IMeal } from '../../interfaces/Interfaces'
 import SearchDrawer from '../../navigation/SearchDrawer';
 import ButtonsContext from '../../context/ButtonsContext';
 import { usePlanList } from '../../context/PlanList';
@@ -19,9 +19,11 @@ export default function MealBuilder({ navigation, route }: any) {
     const [quicklist] = useContext(QuicklistContext);
     const [currentMeal, setCurrentMeal] = useState<IMeal>({ id: 0, name: "", foods: [], data: {}});
     const { mealList, setMealList } = useMealList();
-    const { planList, setPlanList } = usePlanList();
+    const { planList } = usePlanList();
     const [page, setPage] = useState<number>(1);
     const [hideButtons, setHideButtons] = useState<boolean>(false);
+    const [isNameEditing, setIsNameEditing] = useState<boolean>(false);
+    const ref = useRef<any>(null)
     const [inEditMode, setInEditMode] = useState<boolean>(false);
     const [fromPlan, setFromPlan] = useState<boolean>(false);
     
@@ -62,11 +64,15 @@ export default function MealBuilder({ navigation, route }: any) {
         // load in current meal, and place in search mode
         setCurrentMeal(meal)
         setInEditMode(true);
-        //setPage(2);
     }
 
-    function changePage() {
-        (page===1) ? setPage(2):setPage(1)
+    async function editName() {
+        if (isNameEditing) setIsNameEditing(false)
+        else {
+            // async to allow input to appear before we give it focus
+            let x = await setIsNameEditing(true)
+            ref.current?.focus();
+        }
     }
 
     function editMeal(mode: number, index: number, quantity: any) {
@@ -133,7 +139,7 @@ export default function MealBuilder({ navigation, route }: any) {
         let energyFound: boolean;
         let carbsFound: boolean;
 
-        foods.forEach((foodItem: any, i: number) => {
+        foods.forEach((foodItem: IFood, i: number) => {
 
             multiplier = foodItem["multiplier"]
             if (i == 0) {
@@ -503,27 +509,20 @@ export default function MealBuilder({ navigation, route }: any) {
         }
     }
 
-    function replaceMeal(newMeal: IMeal) {
-
-        const planIndex = route.params.plan
-        if (planIndex === undefined) return
-
-        const updatedPlanMeals = planList![planIndex]["meals"].map((meal: IMeal) => {
-            if (meal["id"] === newMeal["id"]) {
-                return newMeal
-            }
-            else return meal
-        })
-        const updatedPlanList = planList!.map((plan: IPlan, index: number) => {
-            if (index === planIndex) {
-                return({
-                    ...plan,
-                    meals: updatedPlanMeals
-                })
-            }
-            else return plan
-        })
-        setPlanList(updatedPlanList)
+    function removeFood(id: any) {
+        Alert.alert(
+            'Remove',
+            'Remove from meal?',[
+                { text: 'Cancel', onPress: () => {}, style: 'cancel'},
+                { text: 'Yes', onPress: () => { 
+                    setCurrentMeal({
+                        ...currentMeal,
+                        foods: currentMeal["foods"].filter((item:any) => item["id"] !== id)
+                    });
+                }},
+            ],
+            { cancelable: false }
+        );
     }
 
     
@@ -533,11 +532,11 @@ export default function MealBuilder({ navigation, route }: any) {
         if (typeof newName==="string") {
             // don't allow blank name
             if (newName==="") return
-            console.log(newName)
             setCurrentMeal({
                 ...currentMeal,
                 name: newName
             })
+            setIsNameEditing(false)
         }
     }
 
@@ -562,22 +561,60 @@ export default function MealBuilder({ navigation, route }: any) {
 
         <View style={viewStyles.modal}>
             <View style={viewStyles.overall}>
-                { (page===1) 
-                ?
+                { (page !== 3) &&
+                <View style={viewStyles.textInput}>
+                { (isNameEditing) ?
+                    <View style={viewStyles.mealNameView}>
+                        <TextInput
+                            ref={ref}
+                            style={textStyles.mealNameTextInput}
+                            placeholder={currentMeal["name"]}
+                            placeholderTextColor="#adadad"
+                            returnKeyType="done" 
+                            textAlign="center"
+                            maxLength={20}
+                            onEndEditing={(value) => newMealName(value.nativeEvent.text) }
+                            onSubmitEditing={(value) => newMealName(value.nativeEvent.text) } 
+                        ></TextInput>
+                        <Button children="Cancel" textColor="#c5050c" onPress={editName} labelStyle={textStyles.editButton} style={buttonStyles.nameEditButton}></Button>
+                    </View>
+                    :
+                    <View style={viewStyles.mealNameView}>
+                        <Text numberOfLines={1} style={textStyles.mealName}>{currentMeal["name"]}</Text>
+                        <Button children="Edit Name" textColor="#282728" onPress={editName} labelStyle={textStyles.editButton} style={buttonStyles.nameEditButton}></Button>
+                    </View>
+                }
+                </View>
+                }
+                { (page === 1) &&
                 // page 1 encompasses Meal Name selection and Quicklist
                 <View style={viewStyles.inputScroll}>
-                    <View style={viewStyles.textInput}>
-                        <TextInput 
-                                selectionColor="#f7f7f7" 
-                                placeholderTextColor="#adadad"
-                                style={textStyles.textInput} 
-                                returnKeyType="done"  
-                                placeholder={currentMeal["name"]}
-                                textAlign="center"
-                                onEndEditing={(value) => newMealName(value.nativeEvent.text) }
-                                onSubmitEditing={(value) => newMealName(value.nativeEvent.text) }>
-                        </TextInput>
+                { (currentMeal["foods"].length > 0)
+                    ?
+                    <ScrollView style={viewStyles.scroll}>
+                        <View style={viewStyles.exampleBanner}>
+                            <Text style={textStyles.exampleBanner}>Current Meal</Text>
+                        </View> 
+                        { (currentMeal["foods"].length > 0) &&
+                            currentMeal["foods"].map((food: IFood, i: number) => {
+                                return (
+                                    <FoodCard key={i} id={food["id"]} brand={food.brand} nutrients={food.nutrition} callback={removeFood}
+                                        name={food["name"]} quantity={food["quantity"]} unit={food["unit"]} multiplier={food["multiplier"]} mode={4}> 
+                                    </FoodCard>
+                                )
+                            })
+                        }
+                    </ScrollView>
+                    :
+                    <View style={viewStyles.noFoodsBannerView}>
+                        <Text style={textStyles.noFoodsBannerText}>Nothing saved in meal</Text>
                     </View>
+                }
+                </View>
+                }
+                { (page === 2) &&
+                // page 1 encompasses Meal Name selection and Quicklist
+                <View style={viewStyles.inputScroll}>
                     { (quicklist.length > 0) 
                         // show separate message if Quicklist is empty
                         ?
@@ -586,7 +623,7 @@ export default function MealBuilder({ navigation, route }: any) {
                                 <Text style={textStyles.exampleBanner}>My Quicklist</Text>
                             </View> 
                             {
-                                quicklist.map((food: any, i: number) => {
+                                quicklist.map((food: IFood, i: number) => {
                                     const inMeal = isInMeal(food.id)
                                     const servingSize = inMeal ? foodQuantity(food.id) : food.servingSize
                                     return (
@@ -611,9 +648,10 @@ export default function MealBuilder({ navigation, route }: any) {
                     }
 
                 </View>
-                :
+                }
+                { (page === 3) &&
                 // page 2 is entirely composed of the Search feature
-                <View style={viewStyles.inputScroll}>
+                <View style={viewStyles.editScroll}>
                     <View style={viewStyles.overall}>
                             <SearchDrawer name="Meals"></SearchDrawer>
                     </View>
@@ -621,8 +659,12 @@ export default function MealBuilder({ navigation, route }: any) {
                 }
                 {/* Buttons on the bottom of screen */}
                 <View style={buttonStyles.bottomButtonsView}>
-                    <View style={buttonStyles.changeSearchButtonView}>
-                        <Button disabled={hideButtons} children={(page===1) ? "Search all foods":"Quicklist"} textColor="#2774AE" labelStyle={textStyles.buttons} style={buttonStyles.singleButton} onPress={changePage}></Button>
+                    <View style={buttonStyles.pageButtonsView}>
+                        <Button disabled={hideButtons || page === 1} children="Prev" textColor="#2774AE" labelStyle={textStyles.buttons}  style={buttonStyles.twinButtons} onPress={() => setPage(page - 1)}></Button>
+                        <View style={{width: 25, justifyContent: 'center', flexDirection: 'row'}}>
+                            <Text>{page}</Text>
+                        </View>
+                        <Button disabled={hideButtons || page === 3} children="Next" textColor="#2774AE" labelStyle={textStyles.buttons} style={buttonStyles.twinButtons} onPress={() => setPage(page + 1)}></Button>
                     </View>
                     <View style={buttonStyles.closeButtonsView}>
                         <View style={buttonStyles.closeSaveButtons}>
@@ -652,17 +694,17 @@ const viewStyles = StyleSheet.create({
         alignItems: 'center'
     },
     scroll: {
-        height: '90%',
+        height: '100%',
     },
     editScroll: {
-        height: '85%',
+        height: '82.5%',
     },
     modal: {
         alignItems: 'center',
         backgroundColor: 'white',
     },
     inputScroll:{
-        height: '82.5%'
+        height: '74.25%'
     },
     header: {
         textTransform: 'capitalize',
@@ -674,12 +716,22 @@ const viewStyles = StyleSheet.create({
         alignItems: 'center'
     },
     textInput: {
-        height: '10%',
-        alignItems: 'center',
+        height: '8.25%',
         justifyContent: 'center',
     },
     exampleBanner: {
         padding: 12,
+    },
+    mealNameView: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    noFoodsBannerView: {
+        height: '100%',
+        backgroundColor:'white',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
 })
 
@@ -687,6 +739,9 @@ const textStyles = StyleSheet.create({
     buttons: {
         fontSize: 20,
         fontWeight: '300'
+    },
+    editButton: {
+        fontSize: 12
     },
     exampleBanner: {
         fontSize: 20,
@@ -706,7 +761,24 @@ const textStyles = StyleSheet.create({
         padding: 7.5,
         fontSize: 18,
         fontWeight: '300'
-    }
+    },
+    mealName: {
+        fontSize: 24,
+        fontWeight: '300',
+        padding: 7.5,
+    },
+    mealNameTextInput: {
+        fontSize: 24,
+        fontWeight: '300',
+        width: 200,
+        padding: 7.5,
+        borderWidth: 1,
+        borderColor: '#646569',
+    },
+    noFoodsBannerText: {
+        fontSize: 17,
+        fontWeight: '300'
+    },
 })
 
 const buttonStyles = StyleSheet.create({
@@ -747,6 +819,19 @@ const buttonStyles = StyleSheet.create({
     },
     twinButtons: {
         width: 170
-    }
+    },
+    nameEditButton: {
+        position: 'absolute',
+        right: '5%',
+        alignSelf: 'center'
+    },
+    pageButtonsView: {
+        height: '40%',
+        width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#f7f7f7'
+    },
     
 })

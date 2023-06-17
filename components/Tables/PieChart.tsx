@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { PieChart } from "react-native-chart-kit";
-import { Dimensions, Text } from "react-native";
+import { Dimensions, StyleSheet, Text } from "react-native";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -25,14 +25,17 @@ export default function Pie(props: any) {
     let fatFound: boolean = false;
     let carbsFound: boolean = false;
     let proteinFound: boolean = false;
+    let alcFound: boolean = false;
+
     let cals: number = 0;
     let protein: number = 0;
     let carbs: number = 0;
     let fats: number = 0;
+    let alc: number = 0;
 
     for (const nutrient of nutrition) {
         // break early if we found everything
-        if (calsFound && fatFound && carbsFound && proteinFound) break;
+        if (calsFound && fatFound && carbsFound && proteinFound && alcFound) break;
 
         // this is the preferred calorie metric
         if (nutrient["nutrientNumber"] === 208) {
@@ -59,10 +62,15 @@ export default function Pie(props: any) {
             proteinFound = true
             protein = nutrient["value"] * 4
         }
+
+        else if (!alcFound && nutrient["nutrientName"].includes("Alcohol")) {
+            alcFound = true
+            alc = nutrient["value"] * 7
+        }
     }
 
     if (cals === 0) {
-        cals = Math.round(( fats * 9 + carbs * 4 + protein * 4 ) * multiplier)
+        cals = Math.round(( fats * 9 + carbs * 4 + protein * 4 + alc * 7) * multiplier)
     }
 
     const data = [
@@ -76,7 +84,7 @@ export default function Pie(props: any) {
         {                
             name: "Carbs",
             population: carbs,                
-            color: "rgba(131, 167, 234, 1)",
+            color: "#398f29",
             legendFontColor: "#7F7F7F",
             legendFontSize: 15
         },
@@ -89,9 +97,19 @@ export default function Pie(props: any) {
         }
     ]
 
+    if (alc > 0) {
+        data.push({
+            name: "Alcohol",
+            population: alc,                
+            color: "#ffc73b",
+            legendFontColor: "#7F7F7F",
+            legendFontSize: 15,
+        })
+    }
+
     return(
        <>
-        <Text style={{paddingBottom: 70, fontSize: 18, fontWeight: '400'}}>Caloric Breakdown</Text>
+        <Text style={props.context === "food" ? styles.topFood : styles.topMeal}>Caloric Breakdown</Text>
         <PieChart
             data={data}
             width={screenWidth}
@@ -103,7 +121,30 @@ export default function Pie(props: any) {
             center={[0, 0]}
             absolute={false}
             />
-        <Text style={{paddingTop: 83, fontSize: 15, fontWeight: '400'}}>Total Calories: {cals}</Text>
+        <Text style={props.context === "food" ? styles.bottomFood : styles.bottomMeal}>Total Calories: {cals}</Text>
        </>
     )
 }
+
+const styles = StyleSheet.create({
+    bottomMeal: {
+        paddingTop: 83, 
+        fontSize: 15, 
+        fontWeight: '400'
+    },
+    bottomFood: {
+        paddingTop: 20, 
+        fontSize: 15, 
+        fontWeight: '400'
+    },
+   topMeal: {
+        paddingBottom: 70, 
+        fontSize: 18, 
+        fontWeight: '400'
+    },
+    topFood: {
+        paddingBottom: 34, 
+        fontSize: 18, 
+        fontWeight: '400'
+    }
+})

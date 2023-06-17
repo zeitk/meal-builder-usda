@@ -17,7 +17,7 @@ export default function MealCard(props: any) {
 
         // from PlanBuilder cart
         if (props.mode === 2 || props.mode === 4) {
-            props.callback(props.id)    
+            props.callback(props.id, props.name)    
         }
 
         // from PlanBuilder meal list

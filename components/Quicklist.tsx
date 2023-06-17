@@ -4,10 +4,11 @@ import { Button, Portal } from "react-native-paper";
 import QuicklistContext from "../context/QuicklistContext";
 import FoodCard from "./FoodCard";
 import FoodModal from "./FoodModal";
+import { IFood } from "../interfaces/Interfaces";
 
 export default function Quicklist({ navigation }: any) {
 
-    const [quicklist] = useContext(QuicklistContext)
+    const [quicklist, setQuicklist] = useContext(QuicklistContext)
     const [viewedFoodId, setViewedFoodId] = useState<number>()
     const [viewedFoodName, setViewedFoodName] = useState<String>()
     const [viewedFoodNutrition, setViewedFoodNutrition] = useState<any>({});
@@ -18,10 +19,10 @@ export default function Quicklist({ navigation }: any) {
 
     useEffect(() => {
         setFoodModalVisible(false);
+        sortItems();
     },[])
 
-    function moreInfo(id: number, name: string, image: string) {
-
+    function moreInfo(id: number) {
         quicklist.forEach((food: any) => {
             if (id===food["id"]) {
                 setViewedFoodId(food["id"])
@@ -41,20 +42,50 @@ export default function Quicklist({ navigation }: any) {
         else setFoodModalVisible(false)
     }
 
+    function sortItems() {
+        // sort foods by category before storing
+        const sorted = quicklist.sort((a: IFood, b: IFood) => {
+            if (a["foodCategory"]===undefined || a["foodCategory"]===null) return b
+            else if (b["foodCategory"]===undefined || b["foodCategory"]===null) return a
+            return sortHelper(a,b)
+        })
+        setQuicklist(sorted)
+    }
+
+    function sortHelper(a: any, b: any) {
+        if (a["foodCategory"]!=="Baby Foods" && b["foodCategory"]!=="Baby Foods") {
+            return a["foodCategory"].localeCompare(b["foodCategory"])
+        }
+        else {
+            if (a["foodCategory"]==="Baby Foods") return b
+            else  return a
+        }
+    }
+
     return<>
         <SafeAreaView>
             { (quicklist.length>0) ?
                 <ScrollView style={styles.scrollview}>
                 {
-                    quicklist.map((food: any, i: number) => {
-                        return <FoodCard key={i} id={food.id} name={food.name} nutrients={food.nutrition} brand={food.brand} callback={moreInfo} mode={0}></FoodCard>
+                    quicklist.map((food: IFood, i: number) => {
+                        if (i === 0 || (i > 0 && quicklist[i-1]["foodCategory"]!==quicklist[i]["foodCategory"])) {
+                            return(
+                                <View key={i} >
+                                    <View style={styles.exampleBanner}>
+                                        <Text style={styles.foodCateogoryText}>{food["foodCategory"]}</Text>
+                                    </View>
+                                    <FoodCard key={i} id={food.id} name={food.name} nutrients={food.nutrition} brand={food.brand} callback={moreInfo} mode={0}/>
+                                </View>
+                            )
+                        }
+                        else return <FoodCard key={i} id={food.id} name={food.name} nutrients={food.nutrition} brand={food.brand} callback={moreInfo} mode={0}/>
                     })
                 }
                 </ScrollView>
                 :
                 <View style={styles.emptyQuicklist}>
                     <Text style={styles.text}>Add items to your Quicklist in Search</Text>
-                    <Button children="Search" textColor="#2774AE" labelStyle={styles.buttonText} style={styles.buttonView} onPress={()=>{navigation.navigate('Search')}}></Button>
+                    <Button children="Search" textColor="#2774AE" labelStyle={styles.buttonText} style={styles.buttonView} onPress={()=>{navigation.navigate('SearchDrawer')}}></Button>
                 </View>
             }
             
@@ -90,5 +121,12 @@ const styles = StyleSheet.create({
     buttonText: {
         fontSize: 20,
         fontWeight: '300'
-    }
+    },
+    exampleBanner: {
+        padding: 12
+    },
+    foodCateogoryText: {
+        fontSize: 16,
+        fontWeight: '300'
+    },
 })
