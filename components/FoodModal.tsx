@@ -160,17 +160,23 @@ export default function FoodModal(props: any) {
         foodObject["brand"] = props.brand;
         foodObject["foodCategory"] = props.category;
 
-        // don't store the same item twice
-        quicklist.forEach((foodItem: any) => {
+        // sort and don't store the same item twice
+        let dontSave: boolean = false;
+        let index: number = -1;
+        quicklist.forEach((foodItem: IFood, i: number) => {
             if (foodItem["id"]===foodObject["id"])  {
+                dontSave = true
                 return
             }
+
+            if (foodItem["foodCategory"]===foodObject["foodCategory"]) index = i
         });
+
+        if (dontSave) return
+
+        // either categorize the item or add it at the end
+        const updatedQuicklist = (index !== -1) ? quicklist.toSpliced(index, 0, foodObject) : [...quicklist, foodObject]
         
-        const updatedQuicklist = [
-            ...quicklist,
-            foodObject
-        ]
         setQuicklist(updatedQuicklist)
         saveQuicklist(updatedQuicklist)
         setIsInQuicklist(true);

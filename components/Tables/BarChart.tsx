@@ -10,7 +10,7 @@ const chartConfig = {
     backgroundGradientFromOpacity: 0,
     backgroundGradientTo: "#f7f7f7",
     backgroundGradientToOpacity: 0,
-    color: (opacity = 1) => `black`,
+    color: () => `black`,
     strokeWidth: 3, // optional, default 3W
     barPercentage: 1.5,
     useShadowColorFromDataset: false, // optional,

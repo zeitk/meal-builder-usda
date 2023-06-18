@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, Portal } from "react-native-paper";
 import QuicklistContext from "../context/QuicklistContext";
@@ -8,7 +8,7 @@ import { IFood } from "../interfaces/Interfaces";
 
 export default function Quicklist({ navigation }: any) {
 
-    const [quicklist, setQuicklist] = useContext(QuicklistContext)
+    const [quicklist ] = useContext(QuicklistContext)
     const [viewedFoodId, setViewedFoodId] = useState<number>()
     const [viewedFoodName, setViewedFoodName] = useState<String>()
     const [viewedFoodNutrition, setViewedFoodNutrition] = useState<any>({});
@@ -16,11 +16,6 @@ export default function Quicklist({ navigation }: any) {
     const [viewedFoodServings, setViewedFoodServings] = useState<number>(1)
     const [viewedFoodBrand, setViewedFoodBrand] = useState<string>("")
     const [foodModalVisible, setFoodModalVisible] = useState<Boolean>(false);
-
-    useEffect(() => {
-        setFoodModalVisible(false);
-        sortItems();
-    },[])
 
     function moreInfo(id: number) {
         quicklist.forEach((food: any) => {
@@ -40,26 +35,6 @@ export default function Quicklist({ navigation }: any) {
     function toggleFoodModal() {
         if (!foodModalVisible) setFoodModalVisible(true)
         else setFoodModalVisible(false)
-    }
-
-    function sortItems() {
-        // sort foods by category before storing
-        const sorted = quicklist.sort((a: IFood, b: IFood) => {
-            if (a["foodCategory"]===undefined || a["foodCategory"]===null) return b
-            else if (b["foodCategory"]===undefined || b["foodCategory"]===null) return a
-            return sortHelper(a,b)
-        })
-        setQuicklist(sorted)
-    }
-
-    function sortHelper(a: any, b: any) {
-        if (a["foodCategory"]!=="Baby Foods" && b["foodCategory"]!=="Baby Foods") {
-            return a["foodCategory"].localeCompare(b["foodCategory"])
-        }
-        else {
-            if (a["foodCategory"]==="Baby Foods") return b
-            else  return a
-        }
     }
 
     return<>

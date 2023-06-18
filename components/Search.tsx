@@ -10,13 +10,6 @@ import { SearchBar } from './SearchBar';
 import { useCriteria } from '../context/CriteriaContext';
 import { IFood } from '../interfaces/Interfaces';
 
-const examples: string[] = [
-    "Potato",
-    "Corn",
-    "Bread",
-    "Egg"
-]
-
 export default function Search(props : any) {
 
     // search related states
@@ -102,6 +95,7 @@ export default function Search(props : any) {
                 }
                 setLastSearch(input)
                 sortItems(json.foods)
+                console.log(json.foods)
         })
         scrollRef.current?.scrollTo({
             y: 0,

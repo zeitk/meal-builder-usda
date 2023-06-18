@@ -63,3 +63,10 @@ export interface IButtonContext {
     hideButtons: boolean,
     setHideButtons: (hide: boolean) => void
 }
+
+export interface ISearchBarProps {
+    callback: (input: string) => void,
+    placeholderTextColor: string,
+    navigation?: any, 
+    mode?: string
+}

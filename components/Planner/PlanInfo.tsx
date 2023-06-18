@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, Portal } from "react-native-paper";
 import { StatusBar } from 'expo-status-bar';
 import FoodCard from "../FoodCard";

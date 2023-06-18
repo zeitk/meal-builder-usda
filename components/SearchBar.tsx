@@ -1,32 +1,24 @@
 import React from 'react'
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {  View, TextInput, StyleSheet, Keyboard } from "react-native";
 import { Button } from "react-native-paper";
 import { Feather, Entypo, AntDesign } from "@expo/vector-icons";
+import { ISearchBarProps } from '../interfaces/Interfaces';
 
 const slogans: string[] = [
     "Watcha feeling?",
     "Ex: Potato",
-    "Search for anything!"
+    "Search for anything!",
+    "Ex: Bread",
+    "Enter a food"
 ]
-
-interface ISearchBarProps {
-    callback: (input: string) => void,
-    placeholderTextColor: string,
-    navigation?: any, 
-    mode?: string
-}
 
 export function SearchBar(props: ISearchBarProps) {
 
     const [searchString, setSearchString] = useState("");
     const [pressed, setPressed] = useState(false);
-    const [slogan, setSlogan] = useState("")
-
-    useEffect(() => {
-        setSlogan(slogans[(Math.floor(Math.random()*slogans.length))])
-    }, [])
+    const [slogan, setSlogan] = useState(slogans[(Math.floor(Math.random()*slogans.length))])
 
     function beginSearch() {
         props.callback(searchString);
