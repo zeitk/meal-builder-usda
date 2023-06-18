@@ -176,7 +176,7 @@ export default function FoodModal(props: any) {
 
         // either categorize the item or add it at the end
         const updatedQuicklist = (index !== -1) ? quicklist.toSpliced(index, 0, foodObject) : [...quicklist, foodObject]
-        
+
         setQuicklist(updatedQuicklist)
         saveQuicklist(updatedQuicklist)
         setIsInQuicklist(true);
@@ -210,15 +210,14 @@ export default function FoodModal(props: any) {
     }
 
     function displayString() {
-        let display: string;
-        (props.brand === "Unbranded") ? display = props.name : display = props.brand + " " + props.name
+        const display: string = (props.brand === "Unbranded") ? props.name : props.brand + " " + props.name
         return capitalize(display);
     }
 
     function capitalize(input: string) {
         let editedString = input.toLowerCase();
         const stringLength = input.length;
-        editedString=editedString.slice(0,1).toUpperCase()+editedString.slice(1,stringLength);
+        editedString = editedString.slice(0,1).toUpperCase() + editedString.slice(1,stringLength);
 
         for (let i=1; i < editedString.length; i++) {
              if (editedString[i-1]===' ') editedString=editedString.slice(0,i)+editedString.slice(i,i+1).toUpperCase()+editedString.slice(i+1,stringLength)

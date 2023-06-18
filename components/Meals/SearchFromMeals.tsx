@@ -197,7 +197,7 @@ export default function SearchFromMeals(props: any) {
                 if (item["dataType"] === "Branded") {
                     setCurrentServing(item["servingSize"].toFixed(1))
                     setCurrentUnit(item["servingSizeUnit"])
-                    setCurrentBrand(item["brandName"])
+                    setCurrentBrand(item["brandName"] !== undefined ? item["brandName"] : item["brandOwner"])
                 }
                 else {
                     setCurrentServing(100)

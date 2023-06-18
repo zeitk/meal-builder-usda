@@ -50,27 +50,27 @@ export default function Pie(props: any) {
 
         else if (!fatFound && (nutrient["nutrientName"].includes("Total lipid") || nutrient["nutrientName"].includes("Total fat"))) {
             fatFound = true
-            fats = nutrient["value"] * 9
+            fats = Math.round(nutrient["value"]) * 9
         }
 
         else if (!carbsFound && nutrient["nutrientName"].includes("Carbohydrate")) {
             carbsFound = true
-            carbs = nutrient["value"] * 4
+            carbs = Math.round(nutrient["value"])  * 4
         }
 
         else if (!proteinFound && nutrient["nutrientName"].includes("Protein")) {
             proteinFound = true
-            protein = nutrient["value"] * 4
+            protein = Math.round(nutrient["value"])  * 4
         }
 
         else if (!alcFound && nutrient["nutrientName"].includes("Alcohol")) {
             alcFound = true
-            alc = nutrient["value"] * 7
+            alc = Math.round(nutrient["value"])  * 7
         }
     }
 
     if (cals === 0) {
-        cals = Math.round(( fats * 9 + carbs * 4 + protein * 4 + alc * 7) * multiplier)
+        cals = Math.round(( fats + carbs + protein + alc) * multiplier)
     }
 
     const data = [
