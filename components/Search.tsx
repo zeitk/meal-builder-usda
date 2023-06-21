@@ -95,7 +95,6 @@ export default function Search(props : any) {
                 }
                 setLastSearch(input)
                 sortItems(json.foods)
-                console.log(json.foods)
         })
         scrollRef.current?.scrollTo({
             y: 0,
