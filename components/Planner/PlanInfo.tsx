@@ -42,7 +42,7 @@ export default function PlanInfo( props: any) {
     var planIndex = 0;
     planList.forEach((plan: any, index: number) => {
         if (plan["id"]===props.route.params["id"]) {
-            plan = index;
+            planIndex = index;
             return
         }
     })

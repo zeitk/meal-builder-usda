@@ -13,7 +13,7 @@ export default function PlanCard(props: any) {
     const { planList, setPlanList } = usePlanList();
 
     function pressAction() {
-         props.navigation.navigate('PlanInfo', { id: props["id"] })
+        props.navigation.navigate('PlanInfo', { id: props["id"] })
     }
 
     // store updated planList to persistant memory
